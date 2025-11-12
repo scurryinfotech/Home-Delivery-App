@@ -3,7 +3,7 @@ import React from 'react';
 import { ShoppingCart, Clock } from 'lucide-react';
 
 const StickyCartButton = ({ onClick, onOrderHistoryClick, itemCount }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white p-3 border-t shadow-md z-40">
+  <div className="fixed bottom-0 left-0 right-0 bg-white p-3 border-t shadow-md z-40 max-w-7xl mx-auto">
     <div className="flex justify-between items-center gap-3">
       {/* Left side - Item count */}
       <div className="flex-1">

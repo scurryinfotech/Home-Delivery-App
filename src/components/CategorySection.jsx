@@ -47,7 +47,7 @@ const isExpanded = expanded;
     >
       <button
         onClick={() => toggleCategory(categoryId)}
-        className="text-lg font-semibold mt-3 mb-2 text-black bg-gray-100 px-4 py-2 rounded shadow w-full text-left cursor-pointer"
+        className="text-lg font-semibold mt-3 mb-2 text-black bg-gray-100 px-4 py-2 rounded shadow w-full text-left cursor-pointer "
         aria-expanded={isExpanded}
         aria-controls={`panel-${categoryId}`}
         data-cat-btn="true">

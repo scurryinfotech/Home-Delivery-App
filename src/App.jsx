@@ -13,6 +13,8 @@ import { useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import HomeDelivery from "./components/HomeDelivery";
+import AuthContainer from './components/auth/AuthContainer';
+
 
 const RestaurantApp = () => {
   const [categories, setCategories] = useState([]);
@@ -22,72 +24,102 @@ const RestaurantApp = () => {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [selectedTable, setSelectedTable] = useState("");
-  const [showTableSelection, setShowTableSelection] = useState(false);
+  // const [showTableSelection, setShowTableSelection] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null); // New state for authenticated user
+
+  
   const [isLoading, setIsLoading] = useState(true);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showHomeDelivery, setShowHomeDelivery] = useState(false);
+   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
+  
   // const [customerName, setCustomerName] = useState("");
   // const [userPhone, setUserPhone] = useState("");
 
+const handleAuthSuccess = (authData) => {
+  setAuthUser(authData.user);
+  setAuthToken(authData.token);
+  setIsAuthenticated(true);
+  setUser(authData.user); // your existing setUser
+ 
+};
+const handleLogout = () => {
+  setAuthUser(null);
+  setAuthToken(null);
+  setIsAuthenticated(false);
+  setUser(null);
+  setCart([]);
+  toast.info('Logged out successfully');
+};
+
+
+
+// Authentication
+  
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const tableFromURL = queryParams.get("table");
 
   // ---- Place Order ----
   // -----Toastify is used for better user experience------
-  const handlePlaceOrder = async ({ customerName, userPhone }) => {
-    try {
-      const token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzUxMjA5MTg4LCJleHAiOjE3NTg5ODUxODgsImlhdCI6MTc1MTIwOTE4OH0.H2XoHKLvlrM8cpb68ht18K2Mkj6PVnSSd-tM4HmMIfI";
+ const handlePlaceOrder = async ({
+  customerName,
+  userPhone,
+  address,
+  userId = authUser?.userId,
+  instructions,
+  table,
+  cart
+}) => {
+  try {
+    const token = localStorage.getItem('token');
+     const userId = localStorage.getItem('userId');  
 
-      if (!token) {
-        toast.error("User not authenticated");
-        return;
-      }
-      if (!selectedTable) {
-        toast.error("Please select a table");
-        return;
-      }
-
-      const orderData = {
-        selectedTable:
-          selectedTable.TableNo ||
-          selectedTable.tableNo ||
-          selectedTable.id ||
-          selectedTable,
-        userName: 2,
-        customerName, // ✅ from user input
-        userPhone, // ✅ from user input
-        orderItems: cart.map((item) => ({
-          price: item.price,
-          item_id: parseInt(item.id),
-          full: item.size === "full" ? item.quantity : 0,
-          half: item.size === "half" ? item.quantity : 0,
-        })),
-      };
-
-      await axios.post("https://localhost:7104/api/Order/Post", orderData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      toast.success("Order placed successfully!");
-      setCart([]);
-      setShowCart(false);
-    } catch (error) {
-      toast.error("Failed to place order. " + error.message);
-    }
-  };
-  const handleOrderHistoryClick = () => {
-    if (!selectedTable) {
-      toast.error("Please select a table first");
-      setShowTableSelection(true);
+    if (!token) {
+      toast.error("User not authenticated");
       return;
     }
+    
+
+   const orderData = {
+  customerName, // must be a non-empty string
+  userPhone,    // must be a non-empty string
+  userName: 2, // should be a string if your model expects string
+  userId: userId,
+  OrderType: "Online", // <-- add this line
+  // address: address || "",  // must be a string, not null
+  Address: address || "",  // <-- add this line
+  specialInstruction: instructions || "",
+  selectedTable: table || null,
+  orderItems: cart.map((item) => ({
+    Price: item.price, // capital "P"
+    item_id: parseInt(item.id),
+    full: item.size === "full" ? item.quantity : 0,
+    half: item.size === "half" ? item.quantity : 0,
+  })),
+};
+
+    await axios.post("https://localhost:7104/api/Order/PlaceOnlineOrder", orderData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    toast.success("Order placed successfully!");
+    setCart([]);
+    setShowCart(false);
+  } catch (error) {
+    toast.error("Failed to place order. " + error.message);
+  }
+};
+
+
+  const handleOrderHistoryClick = () => {
     setShowOrderHistory(true);
   };
 
@@ -96,7 +128,7 @@ const RestaurantApp = () => {
     const fetchData = async () => {
       try {
         const token =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzUxMjA5MTg4LCJleHAiOjE3NTg5ODUxODgsImlhdCI6MTc1MTIwOTE4OH0.H2XoHKLvlrM8cpb68ht18K2Mkj6PVnSSd-tM4HmMIfI";
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q";
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
@@ -167,7 +199,7 @@ const RestaurantApp = () => {
   useEffect(() => {
     if (tableFromURL) {
       setSelectedTable(tableFromURL);
-      setShowTableSelection(false);
+      // setShowTableSelection(false);
     }
   }, [tableFromURL]);
 
@@ -319,105 +351,110 @@ const RestaurantApp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white relative scroll-smooth">
-      <Header
-        getCartItemCount={getCartItemCount}
-        setShowCart={setShowCart}
-        onDeliveryClick={() => setShowHomeDelivery(true)}
-      />
+  <><ToastContainer position="top-right" autoClose={3000} />
+    {!isAuthenticated ? (
+      <>
+       
+        <AuthContainer onAuthSuccess={handleAuthSuccess} />
+       
+      </>
+    ) : (
+      <div className="min-h-screen bg-white relative scroll-smooth">
+        <Header
+          getCartItemCount={getCartItemCount}
+          setShowCart={setShowCart}
+          onDeliveryClick={() => setShowHomeDelivery(true)}
+          user={authUser}
+          onLogout={handleLogout}
+        />
 
-      {isLoading ? (
-        <Loader />
-      ) : error ? (
-        <div className="text-black-500 text-center mt-10">
-          Error Occured While Loading Data
-        </div>
-      ) : (
-        <>
-          {/* Search */}
-          <div className="sticky top-14 z-20 bg-white max-w-7xl mx-auto p-3 sm:p-4 shadow-md">
-            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        {isLoading ? (
+          <Loader />
+        ) : error ? (
+          <div className="text-black-500 text-center mt-10">
+            Error Occured While Loading Data
           </div>
+        ) : (
+          <>
+            {/* Search */}
+            <div className="sticky top-14 z-20 bg-white max-w-7xl mx-auto p-3 sm:p-4 shadow-md">
+              <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            </div>
 
-          {/* Category Buttons */}
-          <div className="sticky top-28 bg-white z-10 pt-2 pr-0.5 pb-2 pl-0.5">
-            <CategoryButtons
-              categories={categories}
-              toggleCategory={(id) => {
-                // ensure expanded before scroll
-                setExpandedCategories((prev) => ({ ...prev, [id]: true }));
-                // smooth scroll to the section
-                const section = document.getElementById(`menu-category-${id}`);
-                if (section)
-                  section.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-              }}
-              expandedCategories={expandedCategories}
+            {/* Category Buttons */}
+            <div className="sticky top-28 bg-white z-10 pt-2 pr-0.5 pb-2 pl-0.5 max-w-7xl mx-auto">
+              <CategoryButtons
+                categories={categories}
+                toggleCategory={(id) => {
+                  // ensure expanded before scroll
+                  setExpandedCategories((prev) => ({ ...prev, [id]: true }));
+                  // smooth scroll to the section
+                  const section = document.getElementById(`menu-category-${id}`);
+                  if (section)
+                    section.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                }}
+                expandedCategories={expandedCategories}
+              />
+            </div>
+
+            {/* Menu List */}
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-8">
+              <MenuList
+                groupedItems={groupedItemsForList}
+                categories={categories}
+                expandedCategories={expandedCategories}
+                toggleCategory={toggleCategory}
+                getItemQuantityInCart={getItemQuantityInCart}
+                addToCart={addToCart}
+                updateCartQuantity={updateCartQuantity}
+              />
+            </div>
+
+            {showCart && (
+              <CartModal
+                cart={cart}
+                getCartTotal={getCartTotal}
+                updateCartQuantity={updateCartQuantity}
+                removeFromCart={removeFromCart}
+                handlePlaceOrder={handlePlaceOrder}
+                selectedTable={selectedTable}
+                setShowCart={setShowCart}
+              />
+            )}
+
+            {showHomeDelivery && (
+              <HomeDelivery 
+                onClose={() => setShowHomeDelivery(false)}
+                user={authUser}
+                onAuthSuccess={handleAuthSuccess}
+              />
+            )}
+
+            {/* ✅ Order History Modal */}
+            {showOrderHistory && (
+              <OrderHistory
+                selectedTable={selectedTable}
+                onClose={() => setShowOrderHistory(false)}
+                tableNo={selectedTable}
+              />
+            )}
+
+            <StickyCartButton
+              itemCount={getCartItemCount()}
+              onClick={() => setShowCart(true)}
+              onOrderHistoryClick={handleOrderHistoryClick}
             />
-          </div>
 
-          {/* Menu List */}
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-8">
-            <MenuList
-              groupedItems={groupedItemsForList}
-              categories={categories}
-              expandedCategories={expandedCategories}
-              toggleCategory={toggleCategory}
-              getItemQuantityInCart={getItemQuantityInCart}
-              addToCart={addToCart}
-              updateCartQuantity={updateCartQuantity}
-            />
-          </div>
-
-          {showCart && (
-            <CartModal
-              cart={cart}
-              getCartTotal={getCartTotal}
-              updateCartQuantity={updateCartQuantity}
-              removeFromCart={removeFromCart}
-              handlePlaceOrder={handlePlaceOrder}
-              selectedTable={selectedTable}
-              setShowCart={setShowCart}
-              //   setCustomerName={setCustomerName}
-              // setUserPhone={setUserPhone}
-            />
-          )}
-
-          {showTableSelection && !selectedTable && (
-            <TableSelectionModal
-              setSelectedTable={setSelectedTable}
-              setShowTableSelection={setShowTableSelection}
-            />
-          )}
-
-          {showHomeDelivery && (
-            <HomeDelivery onClose={() => setShowHomeDelivery(false)} />
-          )}
-
-          {/* ✅ Order History Modal */}
-          {showOrderHistory && (
-            <OrderHistory
-              selectedTable={selectedTable}
-              onClose={() => setShowOrderHistory(false)}
-              tableNo={selectedTable}
-              // orderId={generatedOrderId}
-            />
-          )}
-
-          <StickyCartButton
-            // itemCount={getCartItemCount()}
-            itemCount={getCartItemCount()}
-            onClick={() => setShowCart(true)}
-            onOrderHistoryClick={handleOrderHistoryClick}
-          />
-
-          <ToastContainer position="top-right" autoClose={3000} />
-        </>
-      )}
-    </div>
-  );
+            <ToastContainer position="top-right" autoClose={3000} />
+          </>
+        )}
+      </div>
+    )}
+  </>
+);
 };
 
 export default RestaurantApp;

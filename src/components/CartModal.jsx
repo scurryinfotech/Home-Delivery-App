@@ -13,19 +13,58 @@ const CartModal = ({
   const [showDetails, setShowDetails] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [userPhone, setUserPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [deliveryType, setDeliveryType] = useState("Home Delivery");
+  const [instructions, setInstructions] = useState("");
+
+  // Track which fields have errors
+  const [errors, setErrors] = useState({
+    name: false,
+    phone: false,
+    address: false,
+  });
+
+  // Calculate total amount
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => {
+      return total + item.price * item.quantity;
+    }, 0);
+  };
 
   const handleFinalOrder = () => {
-    if (!customerName.trim()) {
-      toast.error("Please enter your name");
+    // Check for validation errors
+    const newErrors = {
+      name: !customerName.trim(),
+      phone: !/^[0-9]{10}$/.test(userPhone),
+      address: deliveryType === "Home Delivery" && !address.trim(),
+    };
+
+    setErrors(newErrors);
+
+    // If any errors exist, show alert and stop
+    if (newErrors.name) {
+      toast("Please enter your name");
       return;
     }
-    if (!/^[0-9]{10}$/.test(userPhone)) {
-      toast.error("Please enter a valid 10-digit phone number");
+    if (newErrors.phone) {
+      toast("Please enter a valid 10-digit phone number");
+      return;
+    }
+    if (newErrors.address) {
+      toast("Please enter delivery address");
       return;
     }
 
-    // ✅ Pass details to API function
-    handlePlaceOrder({ customerName, userPhone });
+    // ✅ Pass all details to API
+    handlePlaceOrder({
+      customerName,
+      userPhone,
+      address: deliveryType === "Home Delivery" ? address : null,
+      deliveryType,
+      instructions,
+      table: selectedTable,
+      cart,
+    });
   };
 
   return (
@@ -64,6 +103,10 @@ const CartModal = ({
                     <p className="text-xs sm:text-sm text-gray-600 capitalize">
                       {item.size} Portion
                     </p>
+                    <p className="text-xs sm:text-sm text-green-600 font-semibold">
+                      Rs {item.price} × {item.quantity} = Rs{" "}
+                      {item.price * item.quantity}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
@@ -95,12 +138,14 @@ const CartModal = ({
                 </div>
               ))}
 
-              {/* Table Info */}
-              <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center gap-2 text-green-700">
-                  <MapPin size={16} />
-                  <span className="text-sm sm:text-base font-semibold">
-                    Table: {selectedTable || "Not Selected"}
+              {/* Total Amount Section */}
+              <div className="mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-l text-gray-800">
+                    Total Amount:
+                  </span>
+                  <span className="text-sm text-green-600">
+                    Rs {calculateTotal()}
                   </span>
                 </div>
               </div>
@@ -108,28 +153,96 @@ const CartModal = ({
               {/* User Details Form */}
               {showDetails ? (
                 <div className="mt-4 space-y-4">
+                  {/* Name */}
                   <div>
                     <label className="text-gray-600 block mb-1">Name</label>
                     <input
                       type="text"
                       value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
+                      onChange={(e) => {
+                        setCustomerName(e.target.value);
+                        if (e.target.value.trim()) {
+                          setErrors((prev) => ({ ...prev, name: false }));
+                        }
+                      }}
                       placeholder="Enter your name"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 outline-none ${
+                        errors.name
+                          ? "border-red-500 focus:ring-red-400"
+                          : "focus:ring-green-400"
+                      }`}
                     />
                   </div>
 
+                  {/* Phone */}
                   <div>
                     <label className="text-gray-600 block mb-1">Phone</label>
                     <input
                       type="tel"
                       value={userPhone}
-                      onChange={(e) =>
-                        setUserPhone(
-                          e.target.value.replace(/\D/g, "").slice(0, 10)
-                        )
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 10);
+                        setUserPhone(value);
+                        if (value.length === 10) {
+                          setErrors((prev) => ({ ...prev, phone: false }));
+                        }
+                      }}
                       placeholder="Enter your phone number"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 outline-none ${
+                        errors.phone
+                          ? "border-red-500 focus:ring-red-400"
+                          : "focus:ring-green-400"
+                      }`}
+                    />
+                  </div>
+
+                  {/* Delivery Type */}
+                  <div>
+                    <label className="text-gray-600 block mb-1">
+                      Delivery Type
+                    </label>
+                    <div className="w-full p-3 border rounded-lg bg-gray-50">
+                      Home Delivery
+                    </div>
+                  </div>
+
+                  {/* Address (only if Home Delivery) */}
+                  {deliveryType === "Home Delivery" && (
+                    <div>
+                      <label className="text-gray-600 block mb-1">
+                        Delivery Address
+                      </label>
+                      <textarea
+                        value={address}
+                        onChange={(e) => {
+                          setAddress(e.target.value);
+                          if (e.target.value.trim()) {
+                            setErrors((prev) => ({ ...prev, address: false }));
+                          }
+                        }}
+                        placeholder="Enter full address with landmark"
+                        rows="3"
+                        className={`w-full p-3 border rounded-lg focus:ring-2 outline-none ${
+                          errors.address
+                            ? "border-red-500 focus:ring-red-400"
+                            : "focus:ring-green-400"
+                        }`}
+                      />
+                    </div>
+                  )}
+
+                  {/* Special Instructions */}
+                  <div>
+                    <label className="text-gray-600 block mb-1">
+                      Special Instructions
+                    </label>
+                    <textarea
+                      value={instructions}
+                      onChange={(e) => setInstructions(e.target.value)}
+                      placeholder="E.g. No onion, call on arrival"
+                      rows="2"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
                     />
                   </div>
@@ -144,15 +257,9 @@ const CartModal = ({
               ) : (
                 <button
                   onClick={() => setShowDetails(true)}
-                  disabled={!selectedTable}
-                  className={`mt-4 w-full py-3 rounded-lg font-semibold text-sm sm:text-base shadow-md transition-all duration-200 
-                    ${
-                      selectedTable
-                        ? "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-teal-700 hover:to-teal-800"
-                        : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    }`}
+                  className="mt-4 w-full py-3 rounded-lg font-semibold text-sm sm:text-base shadow-md transition-all duration-200 bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-teal-700 hover:to-teal-800"
                 >
-                  Place Order
+                  Place Order COD
                 </button>
               )}
             </>
