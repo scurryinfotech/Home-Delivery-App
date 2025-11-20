@@ -64,8 +64,111 @@ const handleLogout = () => {
   const queryParams = new URLSearchParams(location.search);
   const tableFromURL = queryParams.get("table");
 
-  // ---- Place Order ----
-  // -----Toastify is used for better user experience------
+const showOrderSuccessTick = () => {
+  const wrapper = document.createElement("div");
+
+  wrapper.innerHTML = `
+    <div id="order-success-popup"
+      style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 90%;
+        max-width: 350px;
+        transform: translate(-50%, -50%) scale(0.9);
+        background: white;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        text-align: center;
+        z-index: 999999;
+        opacity: 0;
+        animation: popupFadeIn 0.3s ease forwards;
+      "
+    >
+      <div 
+        style="
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          background: #14b8a6;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: auto;
+          box-shadow: 0 4px 15px rgba(20, 184, 166, 0.5);
+          animation: scaleUp 0.4s ease-out;
+        "
+      >
+        <svg width="55" height="55" viewBox="0 0 24 24" fill="none"
+         xmlns="http://www.w3.org/2000/svg"
+         style="animation: checkDraw 0.5s ease-out 0.2s forwards;">
+          <path d="M5 13l4 4L19 7"
+            stroke="white"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-dasharray="24"
+            stroke-dashoffset="24"
+            style="animation: checkDraw 0.5s ease-out 0.2s forwards;"
+          />
+        </svg>
+      </div>
+
+      <p style="margin-top: 15px; font-size: 20px; font-weight: bold; color:#333;">
+        Order Placed Successfully
+      </p>
+
+      <p style="margin-top: 10px; font-size: 14px; color:#444; line-height: 20px;">
+        Order will be served within 10 to 15 minutes.  
+        Thank you!
+      </p>
+    </div>
+
+    <style>
+      @keyframes popupFadeIn {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      }
+
+      @keyframes scaleUp {
+        0% { transform: scale(0.3); }
+        100% { transform: scale(1); }
+      }
+
+      @keyframes checkDraw {
+        from { stroke-dashoffset: 24; }
+        to { stroke-dashoffset: 0; }
+      }
+
+      @keyframes fadeOut {
+        0% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      /* MOBILE FIX */
+      @media (max-width: 480px) {
+        #order-success-popup {
+          width: 90% !important;
+          max-width: 300px !important;
+          padding: 20px !important;
+        }
+      }
+    </style>
+  `;
+
+  document.body.appendChild(wrapper);
+
+  // remove after 10 sec
+  setTimeout(() => {
+    const popup = document.getElementById("order-success-popup");
+    if (popup) {
+      popup.style.animation = "fadeOut 0.6s ease forwards";
+      setTimeout(() => wrapper.remove(), 600);
+    }
+  }, 10000);
+};
+
  const handlePlaceOrder = async ({
   customerName,
   userPhone,
@@ -110,7 +213,7 @@ const handleLogout = () => {
       },
     });
 
-    toast.success("Order placed successfully!");
+   showOrderSuccessTick();
     setCart([]);
     setShowCart(false);
   } catch (error) {

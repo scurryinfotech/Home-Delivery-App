@@ -13,14 +13,14 @@ const StickyCartButton = ({ onClick, onOrderHistoryClick, itemCount }) => (
       {/* Right side - Buttons */}
       <div className="flex gap-3">
         {/* Order History Button */}
-        <button 
+        {/* <button 
           type="button" 
           onClick={onOrderHistoryClick}
           className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 shadow-md"
         >
           <Clock className="w-4 h-4" />
           <span>Orders</span>
-        </button>
+        </button> */}
         
         {/* View Cart Button */}
         <button 
