@@ -60,7 +60,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       const actualTableNo = getTableNumber();
       const userId = localStorage.getItem("userId");
       const response = await fetch(
-        `https://localhost:7104/api/Order/GetOrderHome?username=Grill_N_Shakes${
+        `https://localhost:7104/api/Order/GetOrderHome?${
           userId ? `&userId=${userId}` : ""
         }`,
         {
@@ -101,10 +101,11 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     const colors = {
       1: "bg-yellow-500",
       2: "bg-blue-500",
-      3: "bg-green-500",
-      4: "bg-red-500",
+      3: "bg-blue-500",
+      4: "bg-emerald-500",
+      5: "bg-red-500",
     };
-    return colors[status] || "bg-gray-400";
+    return colors[status] || "bg-slate-400";
   };
 
   const getStatusText = (status) => {
@@ -114,9 +115,11 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       case 2:
         return "Preparing..";
       case 3:
-        return "Delivered";
+        return "Out for delivery.";
+      case 4:
+        return "Delivered.";
       default:
-        return "Unknown Status";
+        return "Cancelled.";
     }
   };
 
@@ -150,10 +153,10 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
   const getProgressSteps = (status) => {
     const steps = [
       { label: "Order Placed", time: "", status: 1 },
-      { label: "Kitchen Confirmed", time: "", status: 2 },
-      { label: "Preparing Food", time: "", status: 2 },
-      { label: "Ready to Deliver", time: "", status: 2 },
-      { label: "Delivered", time: "", status: 3 },
+      { label: "Preparing", time: "", status: 2 },
+      { label: "Out for delivery", time: "", status: 3 },
+      { label: "Delivered", time: "", status: 4 },
+      { label: "Cancelled", time: "", status: 5 },
     ];
 
     return steps.map((step) => ({
@@ -170,7 +173,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
         ? 0
         : selectedOrder.orderStatusId === 2
         ? 2
-        : 4;
+        : 3;
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">

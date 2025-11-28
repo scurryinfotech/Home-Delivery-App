@@ -25,7 +25,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
     );
 
     if (response.data.success) {
-      
+      debugger;
       localStorage.setItem('userId', response.data.user.userId);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('loginame', response.data.user.loginame);
@@ -55,7 +55,8 @@ const AuthContainer = ({ onAuthSuccess }) => {
       const payload = {
         loginame: signupData.email,   // required
         password: signupData.password,   // required
-        name: signupData.name,           // required
+        name: signupData.name,  
+        phone:signupData.phone         // required
         // createdDate: new Date().toISOString(), // backend requires DateTime
         // isActive: true,                  // default to active
       };

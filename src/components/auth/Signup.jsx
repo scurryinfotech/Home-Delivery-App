@@ -4,6 +4,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -14,11 +15,24 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-    // Clear error when user starts typing
+    
+    if (name === 'phone') {
+      
+      const numbersOnly = value.replace(/\D/g, '');
+      if (numbersOnly.length <= 10) {
+        setFormData({
+          ...formData,
+          [name]: numbersOnly
+        });
+      }
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
+    
+    // Clear error when user types
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -30,30 +44,43 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
   const validateForm = () => {
     const newErrors = {};
     
+    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Full name is required';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
     }
     
+    // Email validation
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
     
+    // Phone validation
+    if (!formData.phone) {
+      newErrors.phone = 'Phone number is required';
+    } else if (formData.phone.length !== 10) {
+      newErrors.phone = 'Phone number must be exactly 10 digits';
+    } 
+    
+    
+    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
     
+    // Confirm password validation
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
     
+    // Terms validation
     if (!agreedToTerms) {
       newErrors.terms = 'You must agree to the terms and conditions';
     }
@@ -77,8 +104,15 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
     } catch (error) {
       setErrors({ submit: 'Signup failed. Please try again.' });
     } finally {
-      setIsLoading(true);
+      setIsLoading(false);
     }
+  };
+
+  // Phone number को formatted display करने के लिए
+  const formatPhoneDisplay = (phone) => {
+    if (phone.length === 0) return '';
+    if (phone.length <= 5) return phone;
+    return `${phone.slice(0, 5)} ${phone.slice(5)}`;
   };
 
   return (
@@ -86,10 +120,10 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mb-20">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
-          {/* <p className="text-gray-600">Join us today</p> */}
         </div>
 
         <div className="space-y-6">
+          {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Full Name
@@ -107,6 +141,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
@@ -124,6 +159,28 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
           </div>
 
+          {/* Phone Number - FIXED */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formatPhoneDisplay(formData.phone)}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200 ${
+                errors.phone ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="98765 43210"
+            />
+            {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+            {formData.phone && !errors.phone && formData.phone.length === 10 && (
+              <p className="mt-1 text-sm text-green-600">✓ Valid phone number</p>
+            )}
+          </div>
+
+          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
@@ -141,6 +198,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
           </div>
 
+          {/* Confirm Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Confirm Password
@@ -158,6 +216,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
             {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
           </div>
 
+          {/* Terms and Conditions */}
           <div>
             <div className="flex items-center">
               <input
@@ -180,12 +239,14 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
             {errors.terms && <p className="mt-1 text-sm text-red-600">{errors.terms}</p>}
           </div>
 
+          {/* Submit Error */}
           {errors.submit && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
               {errors.submit}
             </div>
           )}
 
+          {/* Submit Button */}
           <button
             onClick={handleSubmit}
             disabled={isLoading}
@@ -195,6 +256,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
           </button>
         </div>
 
+        {/* Login Link */}
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             Already have an account?{' '}

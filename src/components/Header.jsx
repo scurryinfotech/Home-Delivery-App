@@ -10,18 +10,21 @@ const Header = ({ getCartItemCount, setShowCart,user, onLogout }) => (
         className="bg-teal-500 hover:bg-teal-800 px-2 py-2 sm:px-3 sm:py-2 rounded-lg font-medium transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm shadow-md"
       >
 
-          
-
-
-
         <Home size={16} className="sm:w-5 sm:h-5"/>
         <span className="hidden sm:inline">Delivery</span>
       </button> */}
+      
+       <a href="tel:+918655344771">
+       <button className="bg-teal-500 hover:bg-teal-800 px-2 py-2 sm:px-3 sm:py-2 rounded-lg font-medium transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm shadow-md"
+       >Need Help? Call Us</button>
+       </a>
 
       {/* Center - Restaurant Name */}
       <h1 className="text-lg sm:text-xl md:text-2xl font-bold flex-1 text-center">GNS Home Delivery</h1>
       
       {/* Right side - Cart Button */}
+
+
       <button
         onClick={() => setShowCart(true)}
         className="relative bg-white text-teal-600 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base shadow-md"
