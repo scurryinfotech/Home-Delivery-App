@@ -65,13 +65,12 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
       newErrors.phone = 'Phone number must be exactly 10 digits';
     } 
     
-    
     // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
-    }
+    } 
     
     // Confirm password validation
     if (!formData.confirmPassword) {
@@ -176,7 +175,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
             />
             {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
             {formData.phone && !errors.phone && formData.phone.length === 10 && (
-              <p className="mt-1 text-sm text-green-600">✓ Valid phone number</p>
+              <p className="mt-1 text-sm text-green-600">✓z Valid phone number</p>
             )}
           </div>
 
