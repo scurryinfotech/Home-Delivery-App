@@ -11,7 +11,6 @@ import Loader from "./components/Loader.jsx";
 import OrderHistory from "./components/OrderHistory";
 import { useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import HomeDelivery from "./components/HomeDelivery";
 import AuthContainer from './components/auth/AuthContainer';
 
@@ -159,14 +158,14 @@ const showOrderSuccessTick = () => {
 
   document.body.appendChild(wrapper);
 
-  // remove after 10 sec
+  // remove after 5 sec
   setTimeout(() => {
     const popup = document.getElementById("order-success-popup");
     if (popup) {
       popup.style.animation = "fadeOut 0.6s ease forwards";
       setTimeout(() => wrapper.remove(), 600);
     }
-  }, 10000);
+  }, 5000);
 };
 
  const handlePlaceOrder = async ({
@@ -189,13 +188,13 @@ const showOrderSuccessTick = () => {
     
 
    const orderData = {
-  customerName, // must be a non-empty string
-  userPhone,    // must be a non-empty string
-  userName: 2, // should be a string if your model expects string
+  customerName, // 
+  userPhone,    // 
+  userName: 2, // 
   userId: userId,
-  OrderType: "Online", // <-- add this line
-  // address: address || "",  // must be a string, not null
-  Address: address || "",  // <-- add this line
+  OrderType: "Online", //
+  // address: address || "",  //
+  Address: address || "",  //   
   specialInstruction: instructions || "",
   selectedTable: table || null,
   orderItems: cart.map((item) => ({
@@ -206,7 +205,7 @@ const showOrderSuccessTick = () => {
   })),
 };
 
-    await axios.post("https://localhost:7104/api/Order/PlaceOnlineOrder", orderData, {
+    await axios.post("https://yyadavrrohit-001-site4.rtempurl.com/api/Order/PlaceOnlineOrder", orderData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -235,15 +234,15 @@ const showOrderSuccessTick = () => {
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuCategory?username=Grill_N_Shakes",
+            "https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetMenuCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
+            "https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuItem?username=Grill_N_Shakes",
+            "https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetMenuItem?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
         ]);
@@ -454,7 +453,7 @@ const showOrderSuccessTick = () => {
   };
 
   return (
-  <><ToastContainer position="top-right" autoClose={3000} />
+  <><ToastContainer position="top-right" autoClose={3000} style={{ zIndex: 99999 }} />
     {!isAuthenticated ? (
       <>
        
@@ -551,7 +550,7 @@ const showOrderSuccessTick = () => {
               onOrderHistoryClick={handleOrderHistoryClick}
             />
 
-            <ToastContainer position="top-right" autoClose={3000} />
+            <ToastContainer position="top-right" autoClose={3000} style={{ zIndex: 99999 }} />
           </>
         )}
       </div>

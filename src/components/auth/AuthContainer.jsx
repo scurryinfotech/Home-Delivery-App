@@ -15,12 +15,12 @@ const AuthContainer = ({ onAuthSuccess }) => {
 
     // Build payload matching UserModel (case-sensitive)
     const payload = {
-      loginame: loginData.email,      
+      loginame: loginData.phone,      
       Password: loginData.password
     };
-
+    debugger;
     const response = await axios.post(
-      'https://localhost:7104/api/Order/Login',
+      'https://yyadavrrohit-001-site4.rtempurl.com/api/Order/Login',
       payload
     );
 
@@ -53,7 +53,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
 
       // Build payload matching UserModel
       const payload = {
-        loginame: signupData.email,   // required
+        loginame: signupData.phone,   // required
         password: signupData.password,   // required
         name: signupData.name,  
         phone:signupData.phone         // required
@@ -62,7 +62,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
       };
       const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q"
       const response = await axios.post(
-        'https://localhost:7104/api/Order/AddUser',
+        'https://yyadavrrohit-001-site4.rtempurl.com/api/Order/AddUser',
         payload,
         {
         headers: {
@@ -85,6 +85,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
  else {
         throw new Error(response.data.message || 'Signup failed');
       }
+      debugger;
     } catch (error) {
       setAuthError(error.response?.data?.message || error.message);
       throw error;

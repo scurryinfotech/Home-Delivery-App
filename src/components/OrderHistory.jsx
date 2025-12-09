@@ -60,7 +60,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       const actualTableNo = getTableNumber();
       const userId = localStorage.getItem("userId");
       const response = await fetch(
-        `https://localhost:7104/api/Order/GetOrderHome?${
+        `https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetOrderHome?${
           userId ? `&userId=${userId}` : ""
         }`,
         {
@@ -233,9 +233,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="font-semibold text-orange-800">
-                    Preparing Your Food
-                  </p>
+                  
                   {selectedOrder.orderStatusId === 2 ? (
                     <OrderCountdownTimer
                       modifiedDate={selectedOrder.modifiedDate}
