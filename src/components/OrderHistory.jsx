@@ -25,6 +25,56 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     );
   };
 
+  // NEW: Group orders by orderId
+  const groupOrdersByOrderId = (ordersArray) => {
+    const grouped = {};
+    
+    ordersArray.forEach(order => {
+      const orderId = order.orderId || order.OrderId;
+      if (!grouped[orderId]) {
+        grouped[orderId] = {
+          orderId: orderId,
+          orderStatusId: order.orderStatusId,
+          createdDate: order.createdDate,
+          modifiedDate: order.modifiedDate,
+          tableNo: order.tableNo || order.TableNo,
+          items: []
+        };
+      }
+      grouped[orderId].items.push(order);
+    });
+    
+    // Determine the overall status for each order group
+    Object.values(grouped).forEach(group => {
+      group.orderStatusId = determineOrderStatus(group.items);
+    });
+    
+    return Object.values(grouped);
+  };
+
+  // NEW: Determine overall order status based on all items
+  const determineOrderStatus = (items) => {
+    const statuses = items.map(item => item.orderStatusId);
+    
+    // If any item is cancelled, check if all are cancelled
+    const allCancelled = statuses.every(s => s === 5);
+    if (allCancelled) return 5;
+    
+    // If all items are delivered (ignoring cancelled ones)
+    const nonCancelledStatuses = statuses.filter(s => s !== 5);
+    if (nonCancelledStatuses.length > 0) {
+      const allDelivered = nonCancelledStatuses.every(s => s === 4);
+      if (allDelivered) return 4;
+      
+      // If any item is still being prepared or waiting, use the lowest status
+      const minStatus = Math.min(...nonCancelledStatuses);
+      return minStatus;
+    }
+    
+    // Default to the first item's status
+    return items[0].orderStatusId;
+  };
+
   const sortOrders = (ordersArray) => {
     return ordersArray.sort((a, b) => {
       // Priority order: 1 (Order Placed) > 2 (Preparing) > 3 (Delivered)
@@ -86,8 +136,9 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
           })
         : ordersArray;
 
-      // Sort orders before setting state - show all orders including delivered ones
-      const sortedOrders = sortOrders(filteredOrders);
+      // NEW: Group orders by orderId, then sort
+      const groupedOrders = groupOrdersByOrderId(filteredOrders);
+      const sortedOrders = sortOrders(groupedOrders);
       setOrders(sortedOrders);
     } catch (err) {
       // setError("Failed to load orders");
@@ -130,6 +181,15 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     return basePrice * quantity;
   };
 
+  // NEW: Calculate total price for all items in grouped order (excluding cancelled items)
+  const calculateGroupTotalPrice = (groupedOrder) => {
+    return groupedOrder.items.reduce((total, item) => {
+      // Don't add price for cancelled items
+      if (item.orderStatusId === 5) return total;
+      return total + calculateTotalPrice(item);
+    }, 0);
+  };
+
   const formatPortionText = (order) => {
     if (order.fullPortion) {
       return `${order.fullPortion} Full Portion${
@@ -147,7 +207,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
 
   const getOrderId = () => {
     if (orders.length === 0) return "#OrderId";
-    return `#${orders[0].orderId || orders[0].OrderId || "N/A"}`;
+    return `#${orders[0].orderId || "N/A"}`;
   };
 
   const getProgressSteps = (status) => {
@@ -174,6 +234,8 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
         : selectedOrder.orderStatusId === 2
         ? 2
         : 3;
+
+    const totalPrice = calculateGroupTotalPrice(selectedOrder);
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
@@ -203,10 +265,10 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
             <div className="p-4 border-b">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-gray-600">
-                  Order #{selectedOrder.orderId || selectedOrder.OrderId}
+                  Order #{selectedOrder.orderId}
                 </span>
                 <span className="text-lg font-bold">
-                  ₹{calculateTotalPrice(selectedOrder)}
+                  ₹{totalPrice}
                 </span>
               </div>
               <div className="text-sm text-gray-500">
@@ -233,7 +295,6 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  
                   {selectedOrder.orderStatusId === 2 ? (
                     <OrderCountdownTimer
                       modifiedDate={selectedOrder.modifiedDate}
@@ -246,35 +307,42 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                   )}
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">{}</p>
             </div>
 
-            {/* Order Items */}
+            {/* Order Items - NOW SHOWS ALL ITEMS WITH INDIVIDUAL STATUSES */}
             <div className="p-4">
               <h3 className="font-semibold mb-3">Your Order</h3>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">{selectedOrder.itemName}</p>
-                    <p className="text-sm text-gray-500">
-                      {formatPortionText(selectedOrder)}
-                    </p>
+                {selectedOrder.items.map((item, index) => (
+                  <div key={index} className="py-2 border-b last:border-b-0">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{item.itemName}</p>
+                          <span className={`px-2 py-0.5 rounded text-white text-xs ${getStatusColor(item.orderStatusId)}`}>
+                            {getStatusText(item.orderStatusId)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          {formatPortionText(item)}
+                        </p>
+                        {item.specialInstructions && (
+                          <div className="bg-yellow-50 p-2 rounded border border-yellow-200 mt-2">
+                            <p className="text-xs font-medium text-yellow-800">
+                              Special Instructions:
+                            </p>
+                            <p className="text-xs text-yellow-700">
+                              {item.specialInstructions}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <p className={`font-medium ml-4 ${item.orderStatusId === 5 ? 'line-through text-gray-400' : ''}`}>
+                        ₹{calculateTotalPrice(item)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="font-medium">
-                    ₹{calculateTotalPrice(selectedOrder)}
-                  </p>
-                </div>
-
-                {selectedOrder.specialInstructions && (
-                  <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
-                    <p className="text-sm font-medium text-yellow-800">
-                      Special Instructions:
-                    </p>
-                    <p className="text-sm text-yellow-700">
-                      {selectedOrder.specialInstructions}
-                    </p>
-                  </div>
-                )}
+                ))}
               </div>
             </div>
 
@@ -283,11 +351,11 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>₹{calculateTotalPrice(selectedOrder)}</span>
+                  <span>₹{totalPrice}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Service Charge</span>
-                  <span>0</span>
+                  <span>₹0</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax</span>
@@ -295,7 +363,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                 </div>
                 <div className="flex justify-between font-bold text-base pt-2 border-t">
                   <span>Total</span>
-                  <span>₹{calculateTotalPrice(selectedOrder) + 0}</span>
+                  <span>₹{totalPrice}</span>
                 </div>
               </div>
             </div>
@@ -408,40 +476,60 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
             </div>
           ) : (
             <div className="space-y-3">
-              {orders.map((order, index) => {
-                const orderId = order.Id || order.id || index;
-                const status = order.orderStatusId;
+              {orders.map((groupedOrder, index) => {
+                const status = groupedOrder.orderStatusId;
+                const totalPrice = calculateGroupTotalPrice(groupedOrder);
+                const itemCount = groupedOrder.items.length;
 
                 return (
                   <div
-                    key={orderId}
-                    onClick={() => setSelectedOrder(order)}
-                    className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white border hover:shadow-md transition-all cursor-pointer hover:border-blue-300"
+                    key={groupedOrder.orderId || index}
+                    onClick={() => setSelectedOrder(groupedOrder)}
+                    className="flex items-start p-4 rounded-lg shadow-sm bg-white border hover:shadow-md transition-all cursor-pointer hover:border-blue-300"
                   >
                     <div
                       className={`w-2 h-16 rounded-full ${getStatusColor(
                         status
-                      )}`}
+                      )} flex-shrink-0`}
                     />
 
                     <div className="flex-1 ml-4">
-                      <h2 className="font-semibold text-gray-900">
-                        {order.itemName || "Item Name"},{" "}
-                        {formatPortionText(order)}
-                      </h2>
+                      <div className="flex items-center justify-between mb-2">
+                        <h2 className="font-semibold text-gray-900">
+                          Order #{groupedOrder.orderId}
+                        </h2>
+                        <span
+                          className={`px-3 py-1 rounded text-white text-xs font-medium ${getStatusColor(
+                            status
+                          )}`}
+                        >
+                          {getStatusText(status)}
+                        </span>
+                      </div>
 
-                      <p className="text-sm font-medium text-green-600 mt-1">
-                        Price: ₹{calculateTotalPrice(order)}
-                      </p>
+                      {/* Show all items in the order with their individual statuses */}
+                      <div className="space-y-1 mb-2">
+                        {groupedOrder.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="flex items-center gap-2">
+                            <p className={`text-sm ${item.orderStatusId === 5 ? 'line-through text-gray-400' : 'text-gray-600'}`}>
+                              • {item.itemName}, {formatPortionText(item)}
+                            </p>
+                            {item.orderStatusId === 5 && (
+                              <span className="text-xs text-red-500 font-medium">(Cancelled)</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-500">
+                          {itemCount} item{itemCount > 1 ? 's' : ''}
+                        </p>
+                        <p className="text-sm font-bold text-green-600">
+                          Total: ₹{totalPrice}
+                        </p>
+                      </div>
                     </div>
-
-                    <span
-                      className={`px-3 py-1 rounded text-white text-sm font-medium ${getStatusColor(
-                        status
-                      )}`}
-                    >
-                      {getStatusText(status)}
-                    </span>
                   </div>
                 );
               })}

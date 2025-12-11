@@ -63,10 +63,9 @@ const CartModal = ({
       return;
     }
 
-    // Save phone number to localStorage for future use
     localStorage.setItem("userPhone", userPhone);
 
-    // ✅ Pass all details to API
+  
     handlePlaceOrder({
       customerName,
       userPhone,

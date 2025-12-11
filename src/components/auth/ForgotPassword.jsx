@@ -64,7 +64,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://yyadavrrohit-001-site4.rtempurl.com/api/Otp/send",
+        "https://grillnshakesapi.scurryinfotechllp.com/api/Otp/send",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -118,7 +118,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://yyadavrrohit-001-site4.rtempurl.com/api/Otp/verify",
+        "https://grillnshakesapi.scurryinfotechllp.com/api/Otp/verify",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -166,7 +166,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://localhost:7104/api/Order/ResetPassword",
+        "https://grillnshakesapi.scurryinfotechllp.com/api/Order/ResetPassword",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -176,7 +176,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
           }),
         }
       );
-
+      debugger;
       const data = await res.json();
 
       if (res.ok) {

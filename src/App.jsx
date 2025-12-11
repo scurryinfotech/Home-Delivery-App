@@ -205,7 +205,7 @@ const showOrderSuccessTick = () => {
   })),
 };
 
-    await axios.post("https://yyadavrrohit-001-site4.rtempurl.com/api/Order/PlaceOnlineOrder", orderData, {
+    await axios.post("https://grillnshakesapi.scurryinfotechllp.com/api/Order/PlaceOnlineOrder", orderData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -234,15 +234,15 @@ const showOrderSuccessTick = () => {
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
-            "https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetMenuCategory?username=Grill_N_Shakes",
+            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
+            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetMenuItem?username=Grill_N_Shakes",
+            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuItem?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
         ]);

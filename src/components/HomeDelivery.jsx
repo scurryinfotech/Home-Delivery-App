@@ -234,7 +234,7 @@ const handleAuthSuccess = (authData) => {
         })),
       };
 
-      await axios.post("https://yyadavrrohit-001-site4.rtempurl.com/api/Order/Post", orderData, {
+      await axios.post("https://grillnshakesapi.scurryinfotechllp.com/api/Order/Post", orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
