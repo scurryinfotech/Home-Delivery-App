@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-
+import TermsAndConditions from './TermsAndConditions';
 const Signup = ({ onSwitchToLogin, onSignup }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -12,12 +12,13 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   // OTP States
   const [otpSent, setOtpSent] = useState(false);
   const [sessionId, setSessionId] = useState("");
   const [otp, setOtp] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState(true);
   const [otpTimer, setOtpTimer] = useState(0);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -76,7 +77,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
     setSendingOtp(true);
 
     try {
-      const res = await fetch("https://grillnshakesapi.scurryinfotechllp.com/api/Otp/send", {
+      const res = await fetch("https://localhost:7104/api/Otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -118,7 +119,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch("https://grillnshakesapi.scurryinfotechllp.com/api/Otp/verify", {
+      const res = await fetch("https://localhost:7104/api/Otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -180,7 +181,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
     if (formData.password !== formData.confirmPassword)
       err.confirmPassword = "Passwords do not match";
 
-    // if (!agreedToTerms) err.terms = "You must agree to Terms";
+    if (!agreedToTerms) err.terms = "You must agree to Terms";
 
     return err;
   };
@@ -389,7 +390,12 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
               />
-              <span className="ml-2">I agree to the Terms</span>
+              <span
+                className="ml-2 text-blue-600 underline cursor-pointer"
+                onClick={() => setShowTerms(true)}
+              >
+                I agree to the Terms
+              </span>
               {errors.terms && (
                 <p className="text-red-600 text-sm">{errors.terms}</p>
               )}
@@ -425,6 +431,13 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
           </p>
         </div>
       </div>
+      {showTerms && (
+        <div className="fixed inset-0 bg-Teal bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl max-h-[90vh] overflow-y-auto">
+            <TermsAndConditions onClose={() => setShowTerms(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -64,7 +64,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://grillnshakesapi.scurryinfotechllp.com/api/Otp/send",
+        "https://localhost:7104/api/Otp/send",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -118,7 +118,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://grillnshakesapi.scurryinfotechllp.com/api/Otp/verify",
+        "https://localhost:7104/api/Otp/verify",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -166,7 +166,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://grillnshakesapi.scurryinfotechllp.com/api/Order/ResetPassword",
+        "https://localhost:7104/api/Order/ResetPassword",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
