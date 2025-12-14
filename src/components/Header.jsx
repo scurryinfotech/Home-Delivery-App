@@ -14,9 +14,9 @@ const Header = ({ getCartItemCount, setShowCart,user, onLogout }) => (
         <span className="hidden sm:inline">Delivery</span>
       </button> */}
       
-       <a href="tel:+918655344771">
+       <a href="tel:+918928484618">
        <button className="bg-teal-500 hover:bg-teal-800 px-2 py-2 sm:px-3 sm:py-2 rounded-lg font-medium transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm shadow-md"
-       >Need Help? Call Us</button>
+       >Need Help? Click Me</button>
        </a>
 
       {/* Center - Restaurant Name */}

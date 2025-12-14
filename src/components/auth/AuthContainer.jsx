@@ -15,10 +15,10 @@ const AuthContainer = ({ onAuthSuccess }) => {
 
     // Build payload matching UserModel (case-sensitive)
     const payload = {
-      loginame: loginData.email,      
+      loginame: loginData.phone,      
       Password: loginData.password
     };
-
+    debugger;
     const response = await axios.post(
       'https://localhost:7104/api/Order/Login',
       payload
@@ -53,7 +53,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
 
       // Build payload matching UserModel
       const payload = {
-        loginame: signupData.email,   // required
+        loginame: signupData.phone,   // required
         password: signupData.password,   // required
         name: signupData.name,  
         phone:signupData.phone         // required
@@ -85,6 +85,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
  else {
         throw new Error(response.data.message || 'Signup failed');
       }
+      debugger;
     } catch (error) {
       setAuthError(error.response?.data?.message || error.message);
       throw error;

@@ -11,7 +11,6 @@ import Loader from "./components/Loader.jsx";
 import OrderHistory from "./components/OrderHistory";
 import { useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import HomeDelivery from "./components/HomeDelivery";
 import AuthContainer from './components/auth/AuthContainer';
 
@@ -29,45 +28,46 @@ const RestaurantApp = () => {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null); // New state for authenticated user
 
-  
-  const [isLoading, setIsLoading] = useState(true);
+  const [isRestaurantOpen, setIsRestaurantOpen] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(false);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showHomeDelivery, setShowHomeDelivery] = useState(false);
-   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
-  
+
   // const [customerName, setCustomerName] = useState("");
   // const [userPhone, setUserPhone] = useState("");
 
-const handleAuthSuccess = (authData) => {
-  setAuthUser(authData.user);
-  setAuthToken(authData.token);
-  setIsAuthenticated(true);
-  setUser(authData.user); // your existing setUser
- 
-};
-const handleLogout = () => {
-  setAuthUser(null);
-  setAuthToken(null);
-  setIsAuthenticated(false);
-  setUser(null);
-  setCart([]);
-  toast.info('Logged out successfully');
-};
+  const handleAuthSuccess = (authData) => {
+    setAuthUser(authData.user);
+    setAuthToken(authData.token);
+    setIsAuthenticated(true);
+    setUser(authData.user); // your existing setUser
+
+  };
+  const handleLogout = () => {
+    setAuthUser(null);
+    setAuthToken(null);
+    setIsAuthenticated(false);
+    setUser(null);
+    setCart([]);
+    toast.info('Logged out successfully');
+  };
 
 
 
-// Authentication
-  
+  // Authentication
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const tableFromURL = queryParams.get("table");
 
-const showOrderSuccessTick = () => {
-  const wrapper = document.createElement("div");
+  const showOrderSuccessTick = () => {
+    const wrapper = document.createElement("div");
 
-  wrapper.innerHTML = `
+    wrapper.innerHTML = `
     <div id="order-success-popup"
       style="
         position: fixed;
@@ -157,78 +157,98 @@ const showOrderSuccessTick = () => {
     </style>
   `;
 
-  document.body.appendChild(wrapper);
+    document.body.appendChild(wrapper);
 
-  // remove after 10 sec
-  setTimeout(() => {
-    const popup = document.getElementById("order-success-popup");
-    if (popup) {
-      popup.style.animation = "fadeOut 0.6s ease forwards";
-      setTimeout(() => wrapper.remove(), 600);
-    }
-  }, 10000);
-};
-
- const handlePlaceOrder = async ({
-  customerName,
-  userPhone,
-  address,
-  userId = authUser?.userId,
-  instructions,
-  table,
-  cart
-}) => {
+   
+    setTimeout(() => {
+      const popup = document.getElementById("order-success-popup");
+      if (popup) {
+        popup.style.animation = "fadeOut 0.6s ease forwards";
+        setTimeout(() => wrapper.remove(), 600);
+      }
+    }, 5000);
+  };
+  const fetchRestaurantStatus = async () => {
   try {
-    const token = localStorage.getItem('token');
-     const userId = localStorage.getItem('userId');  
+    const response = await axios.get(
+      "https://localhost:7104/api/Order/GetAvailabilityOnline"
+    );
 
-    if (!token) {
-      toast.error("User not authenticated");
-      return;
-    }
     
+    setIsRestaurantOpen(response.data);
 
-   const orderData = {
-  customerName, // must be a non-empty string
-  userPhone,    // must be a non-empty string
-  userName: 2, // should be a string if your model expects string
-  userId: userId,
-  OrderType: "Online", // <-- add this line
-  // address: address || "",  // must be a string, not null
-  Address: address || "",  // <-- add this line
-  specialInstruction: instructions || "",
-  selectedTable: table || null,
-  orderItems: cart.map((item) => ({
-    Price: item.price, // capital "P"
-    item_id: parseInt(item.id),
-    full: item.size === "full" ? item.quantity : 0,
-    half: item.size === "half" ? item.quantity : 0,
-  })),
-};
-
-    await axios.post("https://localhost:7104/api/Order/PlaceOnlineOrder", orderData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-   showOrderSuccessTick();
-    setCart([]);
-    setShowCart(false);
   } catch (error) {
-    toast.error("Failed to place order. " + error.message);
+    console.error("Failed to fetch restaurant status", error);
   }
 };
 
+  const handlePlaceOrder = async ({
+    customerName,
+    userPhone,
+    address,
+    userId = authUser?.userId,
+    instructions,
+    table,
+    cart
+  }) => {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
 
+      if (!token) {
+        toast.error("User not authenticated");
+        return;
+      }
+
+
+      const orderData = {
+        customerName, // 
+        userPhone,    // 
+        userName: 2, // 
+        userId: userId,
+        OrderType: "Online", //
+        // address: address || "",  //
+        Address: address || "",  //   
+        specialInstruction: instructions || "",
+        selectedTable: table || null,
+        orderItems: cart.map((item) => ({
+          Price: item.price, // capital "P"
+          item_id: parseInt(item.id),
+          full: item.size === "full" ? item.quantity : 0,
+          half: item.size === "half" ? item.quantity : 0,
+        })),
+      };
+
+      await axios.post("https://localhost:7104/api/Order/PlaceOnlineOrder", orderData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      showOrderSuccessTick();
+      setCart([]);
+      setShowCart(false);
+    } catch (error) {
+      toast.error("Failed to place order. " + error.message);
+    }
+  };
+
+useEffect(() => {
+    fetchRestaurantStatus();
+    const fetchInterval = setInterval(fetchRestaurantStatus, 3000);
+    return () => clearInterval(fetchInterval);
+  }, []);
+  
+    
   const handleOrderHistoryClick = () => {
     setShowOrderHistory(true);
   };
 
-  // ---- Fetch Data ----
+  
   useEffect(() => {
     const fetchData = async () => {
+      
       try {
         const token =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q";
@@ -293,9 +313,11 @@ const showOrderSuccessTick = () => {
         setIsLoading(false);
       }
     };
+     
 
     fetchData();
   }, []);
+
 
   // Auto select table from URL
 
@@ -454,110 +476,154 @@ const showOrderSuccessTick = () => {
   };
 
   return (
-  <><ToastContainer position="top-right" autoClose={3000} />
-    {!isAuthenticated ? (
-      <>
-       
-        <AuthContainer onAuthSuccess={handleAuthSuccess} />
-       
-      </>
-    ) : (
-      <div className="min-h-screen bg-white relative scroll-smooth">
-        <Header
-          getCartItemCount={getCartItemCount}
-          setShowCart={setShowCart}
-          onDeliveryClick={() => setShowHomeDelivery(true)}
-          user={authUser}
-          onLogout={handleLogout}
-        />
+    <><ToastContainer position="top-right" autoClose={3000} style={{ zIndex: 99999 }} />
+      {!isAuthenticated ? (
+        <>
 
-        {isLoading ? (
-          <Loader />
-        ) : error ? (
-          <div className="text-black-500 text-center mt-10">
-            Error Occured While Loading Data
+          <AuthContainer onAuthSuccess={handleAuthSuccess} />
+
+        </>
+      ) : (
+        <div className="min-h-screen bg-white relative scroll-smooth">
+          <Header
+            getCartItemCount={getCartItemCount}
+            setShowCart={setShowCart}
+            onDeliveryClick={() => setShowHomeDelivery(true)}
+            user={authUser}
+            onLogout={handleLogout}
+          />
+      
+          {!isRestaurantOpen ? (
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-md w-full">
+            {/* Icon */}
+            <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-red-100 rounded-full flex items-center justify-center mb-6 sm:mb-8 animate-pulse">
+              <svg
+                className="w-10 h-10 sm:w-12 sm:h-12 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+
+            {/* Heading */}
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-red-600 mb-4 sm:mb-6">
+              Restaurant Closed
+            </h2>
+
+            {/* Description */}
+            <p className="text-gray-600 text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 leading-relaxed">
+              Online ordering is currently unavailable.
+            </p>
+
+            {/* Additional Info */}
+            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6 border border-gray-100">
+              <p className="text-gray-700 text-sm sm:text-base mb-3">
+                We'll be back soon! Check our opening hours:
+              </p>
+              <div className="space-y-2 text-sm sm:text-base">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Monday - Sunday</span>
+                  <span className="font-semibold text-gray-800">11:00 AM - 11:00 PM</span>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* Search */}
-            <div className="sticky top-14 z-20 bg-white max-w-7xl mx-auto p-3 sm:p-4 shadow-md">
-              <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        </div>
+          ) : isLoading ? (
+            <Loader />
+          ) : error ? (
+            <div className="text-black-500 text-center mt-10">
+              Error Occured While Loading Data
             </div>
+          ) : (
+            <>
+              {/* Search */}
+              <div className="sticky top-14 z-20 bg-white max-w-7xl mx-auto p-3 sm:p-4 shadow-md">
+                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+              </div>
 
-            {/* Category Buttons */}
-            <div className="sticky top-28 bg-white z-10 pt-2 pr-0.5 pb-2 pl-0.5 max-w-7xl mx-auto">
-              <CategoryButtons
-                categories={categories}
-                toggleCategory={(id) => {
-                  // ensure expanded before scroll
-                  setExpandedCategories((prev) => ({ ...prev, [id]: true }));
-                  // smooth scroll to the section
-                  const section = document.getElementById(`menu-category-${id}`);
-                  if (section)
-                    section.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    });
-                }}
-                expandedCategories={expandedCategories}
+              {/* Category Buttons */}
+              <div className="sticky top-28 bg-white z-10 pt-2 pr-0.5 pb-2 pl-0.5 max-w-7xl mx-auto">
+                <CategoryButtons
+                  categories={categories}
+                  toggleCategory={(id) => {
+                    // ensure expanded before scroll
+                    setExpandedCategories((prev) => ({ ...prev, [id]: true }));
+                    // smooth scroll to the section
+                    const section = document.getElementById(`menu-category-${id}`);
+                    if (section)
+                      section.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                  }}
+                  expandedCategories={expandedCategories}
+                />
+              </div>
+
+              {/* Menu List */}
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-8">
+                <MenuList
+                  groupedItems={groupedItemsForList}
+                  categories={categories}
+                  expandedCategories={expandedCategories}
+                  toggleCategory={toggleCategory}
+                  getItemQuantityInCart={getItemQuantityInCart}
+                  addToCart={addToCart}
+                  updateCartQuantity={updateCartQuantity}
+                />
+              </div>
+
+              {showCart && (
+                <CartModal
+                  cart={cart}
+                  getCartTotal={getCartTotal}
+                  updateCartQuantity={updateCartQuantity}
+                  removeFromCart={removeFromCart}
+                  handlePlaceOrder={handlePlaceOrder}
+                  selectedTable={selectedTable}
+                  setShowCart={setShowCart}
+                />
+              )}
+
+              {showHomeDelivery && (
+                <HomeDelivery
+                  onClose={() => setShowHomeDelivery(false)}
+                  user={authUser}
+                  onAuthSuccess={handleAuthSuccess}
+                />
+              )}
+
+              {/* ✅ Order History Modal */}
+              {showOrderHistory && (
+                <OrderHistory
+                  selectedTable={selectedTable}
+                  onClose={() => setShowOrderHistory(false)}
+                  tableNo={selectedTable}
+                />
+              )}
+
+              <StickyCartButton
+                itemCount={getCartItemCount()}
+                onClick={() => setShowCart(true)}
+                onOrderHistoryClick={handleOrderHistoryClick}
               />
-            </div>
 
-            {/* Menu List */}
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-8">
-              <MenuList
-                groupedItems={groupedItemsForList}
-                categories={categories}
-                expandedCategories={expandedCategories}
-                toggleCategory={toggleCategory}
-                getItemQuantityInCart={getItemQuantityInCart}
-                addToCart={addToCart}
-                updateCartQuantity={updateCartQuantity}
-              />
-            </div>
-
-            {showCart && (
-              <CartModal
-                cart={cart}
-                getCartTotal={getCartTotal}
-                updateCartQuantity={updateCartQuantity}
-                removeFromCart={removeFromCart}
-                handlePlaceOrder={handlePlaceOrder}
-                selectedTable={selectedTable}
-                setShowCart={setShowCart}
-              />
-            )}
-
-            {showHomeDelivery && (
-              <HomeDelivery 
-                onClose={() => setShowHomeDelivery(false)}
-                user={authUser}
-                onAuthSuccess={handleAuthSuccess}
-              />
-            )}
-
-            {/* ✅ Order History Modal */}
-            {showOrderHistory && (
-              <OrderHistory
-                selectedTable={selectedTable}
-                onClose={() => setShowOrderHistory(false)}
-                tableNo={selectedTable}
-              />
-            )}
-
-            <StickyCartButton
-              itemCount={getCartItemCount()}
-              onClick={() => setShowCart(true)}
-              onOrderHistoryClick={handleOrderHistoryClick}
-            />
-
-            <ToastContainer position="top-right" autoClose={3000} />
-          </>
-        )}
-      </div>
-    )}
-  </>
-);
+              <ToastContainer position="top-right" autoClose={3000} style={{ zIndex: 99999 }} />
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
 };
 
 export default RestaurantApp;

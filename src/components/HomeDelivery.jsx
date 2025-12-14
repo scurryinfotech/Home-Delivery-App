@@ -35,15 +35,15 @@ const handleAuthSuccess = (authData) => {
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuCategory?username=Grill_N_Shakes",
+            API_BASE_URL +"/api/Order/GetMenuCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
+            API_BASE_URL +"/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuItem?username=Grill_N_Shakes",
+            API_BASE_URL +"/api/Order/GetMenuItem?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
         ]);

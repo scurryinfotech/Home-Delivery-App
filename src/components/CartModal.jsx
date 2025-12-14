@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Minus, Trash2, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -24,13 +24,21 @@ const CartModal = ({
     address: false,
   });
 
+  // Load phone number from localStorage on component mount
+  useEffect(() => {
+    const savedPhone = localStorage.getItem("loginame");
+    if (savedPhone) {
+      setUserPhone(savedPhone);
+    }
+  }, []);
+
   // Calculate total amount
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
       return total + item.price * item.quantity;
     }, 0);
   };
-
+  
   const handleFinalOrder = () => {
     // Check for validation errors
     const newErrors = {
@@ -55,7 +63,9 @@ const CartModal = ({
       return;
     }
 
-    // ✅ Pass all details to API
+    localStorage.setItem("userPhone", userPhone);
+
+  
     handlePlaceOrder({
       customerName,
       userPhone,

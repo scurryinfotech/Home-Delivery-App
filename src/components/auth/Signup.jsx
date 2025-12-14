@@ -1,274 +1,443 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import TermsAndConditions from './TermsAndConditions';
 const Signup = ({ onSwitchToLogin, onSignup }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: ''
+    name: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
+  // OTP States
+  const [otpSent, setOtpSent] = useState(false);
+  const [sessionId, setSessionId] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isVerified, setIsVerified] = useState(true);
+  const [otpTimer, setOtpTimer] = useState(0);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // OTP Countdown Timer
+  useEffect(() => {
+    if (otpTimer <= 0) return;
+    const interval = setInterval(() => {
+      setOtpTimer((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [otpTimer]);
+
+  // Handle input fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'phone') {
-      
-      const numbersOnly = value.replace(/\D/g, '');
-      if (numbersOnly.length <= 10) {
-        setFormData({
-          ...formData,
-          [name]: numbersOnly
-        });
+
+    if (name === "phone") {
+      // Only allow digits
+      const num = value.replace(/\D/g, "");
+      if (num.length <= 10) {
+        setFormData({ ...formData, phone: num });
+
+        // Reset OTP if number changes
+        if (otpSent && num !== formData.phone) {
+          setOtpSent(false);
+          setOtp("");
+          setIsVerified(false);
+          setSessionId("");
+        }
       }
     } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
+      setFormData({ ...formData, [name]: value });
     }
-    
-    // Clear error when user types
+
     if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: ''
-      });
+      setErrors({ ...errors, [name]: "" });
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = 'Full name is required';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-    }
-    
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-    
-    // Phone validation
-    if (!formData.phone) {
-      newErrors.phone = 'Phone number is required';
-    } else if (formData.phone.length !== 10) {
-      newErrors.phone = 'Phone number must be exactly 10 digits';
-    } 
-    
-    
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    
-    // Terms validation
-    if (!agreedToTerms) {
-      newErrors.terms = 'You must agree to the terms and conditions';
-    }
-    
-    return newErrors;
+  // OTP input handler
+  const handleOtpChange = (e) => {
+    const v = e.target.value.replace(/\D/g, "");
+    if (v.length <= 6) setOtp(v);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formErrors = validateForm();
-    
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+  // ---------------------------
+  // SEND OTP
+  // ---------------------------
+  const sendOtp = async () => {
+    if (formData.phone.length !== 10) {
+      setErrors({ phone: "Enter a valid 10-digit phone number" });
       return;
     }
-    
-    setIsLoading(true);
+
+    setSendingOtp(true);
+
     try {
-      const { confirmPassword, ...signupData } = formData;
-      await onSignup(signupData);
-    } catch (error) {
-      setErrors({ submit: 'Signup failed. Please try again.' });
-    } finally {
-      setIsLoading(false);
+      const res = await fetch("https://localhost:7104/api/Otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: "+91" + formData.phone,
+        }),
+      });
+      toast.success("OTP sent successfully!");
+      const data = await res.json();
+
+      if (res.ok && data.session_id) {
+        setSessionId(data.session_id); // 
+        setOtpSent(true);
+        setOtpTimer(60);
+
+      } else {
+        setErrors({ phone: data.message || "Failed to send OTP" });
+      }
+    } catch (err) {
+      setErrors({ phone: "Error sending OTP" });
     }
+
+    setSendingOtp(false);
   };
 
-  // Phone number को formatted display करने के लिए
-  const formatPhoneDisplay = (phone) => {
-    if (phone.length === 0) return '';
-    if (phone.length <= 5) return phone;
-    return `${phone.slice(0, 5)} ${phone.slice(5)}`;
+  // ---------------------------
+  // VERIFY OTP
+  // ---------------------------
+  const verifyOtp = async () => {
+    if (otp.length !== 6) {
+      setErrors({ otp: "Enter a valid 6-digit OTP" });
+      return;
+    }
+
+    if (!sessionId) {
+      setErrors({ otp: "Session expired. Resend OTP." });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("https://localhost:7104/api/Otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          otp,
+        }),
+      });
+      toast.success("Phone number verified!");
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setIsVerified(true);
+
+      } else {
+        setErrors({ otp: "Incorrect OTP" });
+      }
+    } catch (err) {
+      setErrors({ otp: "Error verifying OTP" });
+    }
+
+    setIsLoading(false);
   };
+
+  // Resend OTP
+  const resendOtp = () => {
+    setOtp("");
+    sendOtp();
+  };
+
+  // ---------------------------
+  // VALIDATE FORM
+  // ---------------------------
+  const validateForm = () => {
+    const err = {};
+
+    if (!formData.name.trim()) err.name = "Enter your name";
+    if (formData.phone.length !== 10) err.phone = "Enter valid phone";
+    if (!isVerified) err.phone = "Verify your phone number first";
+    if (formData.password.length < 6) {
+      err.password = "Password must be at least 6 characters";
+    } else {
+      const p = formData.password;
+      const missing = [];
+
+      if (!/[A-Z]/.test(p)) missing.push("uppercase letter");
+      if (!/[a-z]/.test(p)) missing.push("lowercase letter");
+      if (!/[0-9]/.test(p)) missing.push("number");
+      if (!/[!@#$%^&*]/.test(p)) missing.push("special character (!@#$%^&*)");
+
+      if (missing.length > 0) {
+        if (missing.length === 1) {
+          err.password = `Password must contain at least one ${missing[0]}`;
+        } else {
+          const lastItem = missing.pop();
+          err.password = `Password must contain at least one ${missing.join(", ")} and ${lastItem}`;
+        }
+      }
+    }
+    if (formData.password !== formData.confirmPassword)
+      err.confirmPassword = "Passwords do not match";
+
+    if (!agreedToTerms) err.terms = "You must agree to Terms";
+
+    return err;
+  };
+
+  // ---------------------------
+  // SUBMIT FORM
+  // ---------------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const err = validateForm();
+    if (Object.keys(err).length > 0) {
+      setErrors(err);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await onSignup({
+        name: formData.name,
+        phone: formData.phone,
+        password: formData.password,
+      });
+
+      // If backend says phone exists
+      if (result.success === false && result.message === "Phone already exists") {
+        setErrors({ submit: "This phone number is already registered." });
+        setIsLoading(false);
+        return;
+      }
+
+    } catch (err) {
+      setErrors({ submit: "The number is already in our system" });
+    }
+
+    setIsLoading(false);
+  };
+
+  // Format phone number
+  const formatPhoneDisplay = (p) =>
+    p.length <= 5 ? p : `${p.slice(0, 5)} ${p.slice(5)}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mb-20">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center px-4 py-8">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <h2 className="text-xl font-semibold text-center text-teal-700 mb-2">
+          Welcome to Grill N Shakes
+        </h2>
+        <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+          Create Account
+        </h1>
 
-        <div className="space-y-6">
-          {/* Full Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200 ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter your full name"
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200 ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter your email"
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-          </div>
-
-          {/* Phone Number - FIXED */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
+        {/* PHONE NUMBER */}
+        <div className="mb-6">
+          <label className="block mb-2">Phone Number</label>
+          <div className="flex gap-2">
             <input
               type="tel"
               name="phone"
               value={formatPhoneDisplay(formData.phone)}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200 ${
-                errors.phone ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="98765 43210"
+              disabled={isVerified}
+              className="flex-1 px-4 py-3 border rounded-lg"
+              placeholder="Enter your Phone Number"
             />
-            {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-            {formData.phone && !errors.phone && formData.phone.length === 10 && (
-              <p className="mt-1 text-sm text-green-600">✓ Valid phone number</p>
+
+            {!isVerified && (
+              <button
+                type="button"
+                onClick={sendOtp}
+                disabled={sendingOtp}
+                className="px-4 py-3 bg-teal-600 text-white rounded-lg"
+              >
+                {sendingOtp ? "Sending..." : otpSent ? "Resend" : "Send OTP"}
+              </button>
             )}
           </div>
+          {errors.phone && (
+            <p className="text-red-600 text-sm mt-1">{errors.phone}</p>
+          )}
+        </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200 ${
-                errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Create a password"
-            />
+        {/* OTP FIELD */}
+        {otpSent && !isVerified && (
+          <div className="mb-6">
+            <label className="block mb-2">Enter OTP</label>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={otp}
+                onChange={handleOtpChange}
+                className="flex-1 px-4 py-3 border rounded-lg"
+                placeholder="6-digit OTP"
+              />
+
+              <button
+                type="button"
+                onClick={verifyOtp}
+                disabled={otp.length !== 6 || isLoading}
+                className="px-4 py-3 bg-pink-600 text-white rounded-lg"
+              >
+                {isLoading ? "Verifying..." : "Verify"}
+              </button>
+            </div>
+
+            {errors.otp && (
+              <p className="text-red-600 text-sm mt-1">{errors.otp}</p>
+            )}
+
+            <div className="text-sm mt-2">
+              {otpTimer > 0 ? (
+                <p>Resend OTP in {otpTimer}s</p>
+              ) : (
+                <button className="text-teal-600" onClick={resendOtp}>
+                  Resend OTP
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* AFTER OTP VERIFIED */}
+        {isVerified && (
+          <>
+            {/* Name */}
+            <div className="mb-4">
+              <label className="block mb-2">Full Name</label>
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border rounded-lg"
+                placeholder="Your name"
+              />
+              {errors.name && (
+                <p className="text-red-600 text-sm">{errors.name}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 ${errors.password ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-          </div>
 
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200 ${
-                errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Confirm your password"
-            />
+            {/* Confirm Password */}
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                placeholder="Confirm your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showConfirmPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
             {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
-          </div>
 
-          {/* Terms and Conditions */}
-          <div>
-            <div className="flex items-center">
+            {/* Terms */}
+            <div className="mb-4">
               <input
                 type="checkbox"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
               />
-              <label className="ml-2 text-sm text-gray-700">
-                I agree to the{' '}
-                <button 
-                  type="button"
-                  className="text-pink-600 hover:text-pink-500"
-                  onClick={() => alert('Terms and Conditions would open here')}
-                >
-                  Terms and Conditions
-                </button>
-              </label>
+              <span
+                className="ml-2 text-blue-600 underline cursor-pointer"
+                onClick={() => setShowTerms(true)}
+              >
+                I agree to the Terms
+              </span>
+              {errors.terms && (
+                <p className="text-red-600 text-sm">{errors.terms}</p>
+              )}
             </div>
-            {errors.terms && <p className="mt-1 text-sm text-red-600">{errors.terms}</p>}
-          </div>
 
-          {/* Submit Error */}
-          {errors.submit && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
-              {errors.submit}
-            </div>
-          )}
+            {/* Submit Error */}
+            {errors.submit && (
+              <div className="bg-red-50 border border-red-300 text-red-700 p-3 rounded-lg mb-3">
+                {errors.submit}
+              </div>
+            )}
 
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-pink-500 to-orange-500 text-white py-3 px-4 rounded-lg font-medium hover:from-pink-600 hover:to-orange-600 transition duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
-          </button>
-        </div>
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-pink-500 to-orange-500 text-white py-3 rounded-lg"
+            >
+              {isLoading ? "Creating..." : "Create Account"}
+            </button>
+          </>
+        )}
 
         {/* Login Link */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600">
-            Already have an account?{' '}
+        <div className="text-center mt-8">
+          <p>
+            Already have an account?{" "}
             <button
               onClick={onSwitchToLogin}
-              className="text-pink-600 hover:text-pink-500 font-medium transition duration-200"
+              className="text-pink-600 font-medium"
             >
-              Sign in
+              Login
             </button>
           </p>
         </div>
       </div>
+      {showTerms && (
+        <div className="fixed inset-0 bg-Teal bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl max-h-[90vh] overflow-y-auto">
+            <TermsAndConditions onClose={() => setShowTerms(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
