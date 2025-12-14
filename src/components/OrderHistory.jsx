@@ -120,7 +120,6 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error("Failed to fetch orders");
       }
@@ -295,16 +294,25 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  {selectedOrder.orderStatusId === 2 ? (
+                  {/* {selectedOrder.orderStatusId === 2 ? (
                     <OrderCountdownTimer
                       modifiedDate={selectedOrder.modifiedDate}
                       durationMinutes={10}
                     />
-                  ) : (
+                  ) : {( */}
+                    <div>
                     <p className="text-sm text-gray-600">
                       {getStatusText(selectedOrder.orderStatusId)}
                     </p>
-                  )}
+                    <p className="text-xs font-medium text-yellow-800">
+                              Special Instructions:
+                            </p>
+                    <p className="text-xs text-yellow-700">
+                              {selectedOrder.specialInstructions || "None"}
+                            </p>
+                    </div>
+                    
+                  {/* )} */}
                 </div>
               </div>
             </div>
@@ -319,21 +327,21 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{item.itemName}</p>
-                          <span className={`px-2 py-0.5 rounded text-white text-xs ${getStatusColor(item.orderStatusId)}`}>
-                            {getStatusText(item.orderStatusId)}
-                          </span>
+                          {/* <span className={`px-2 py-0.5 rounded text-white text-xs ${getStatusColor(item.orderStatusId)}`}> */}
+                            {/* {getStatusText(item.orderStatusId)} */}
+                          {/* </span> */}
                         </div>
                         {/* <p className="text-sm text-gray-500">
                           {formatPortionText(item)}
                         </p> */}
                         {item.specialInstructions && (
-                          <div className="bg-yellow-50 p-2 rounded border border-yellow-200 mt-2">
-                            <p className="text-xs font-medium text-yellow-800">
+                          <div className="">
+                            {/* <p className="text-xs font-medium text-yellow-800">
                               Special Instructions:
                             </p>
                             <p className="text-xs text-yellow-700">
                               {item.specialInstructions}
-                            </p>
+                            </p> */}
                           </div>
                         )}
                       </div>

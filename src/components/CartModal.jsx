@@ -113,9 +113,9 @@ const CartModal = ({
                     <p className="text-xs sm:text-sm text-gray-600 capitalize">
                       {item.size} Portion
                     </p>
-                    <p className="text-xs sm:text-sm text-green-600 font-semibold">
-                      Rs {item.price} × {item.quantity} = Rs{" "}
-                      {item.price * item.quantity}
+                    <p className="text-xs sm:text-sm text-black-900 font-semibold">
+                      {/* Rs {item.price} × {item.quantity} = Rs{" "} */}
+                     ₹ {item.price * item.quantity}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -154,8 +154,8 @@ const CartModal = ({
                   <span className="text-l text-gray-800">
                     Total Amount:
                   </span>
-                  <span className="text-sm text-green-600">
-                    Rs {calculateTotal()}
+                  <span className="text-sm text-black-900 font-bold">
+                    ₹ {calculateTotal()}
                   </span>
                 </div>
               </div>

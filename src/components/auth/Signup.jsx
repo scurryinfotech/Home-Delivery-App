@@ -18,7 +18,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [sessionId, setSessionId] = useState("");
   const [otp, setOtp] = useState("");
-  const [isVerified, setIsVerified] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
