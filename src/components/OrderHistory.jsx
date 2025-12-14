@@ -110,7 +110,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       const actualTableNo = getTableNumber();
       const userId = localStorage.getItem("userId");
       const response = await fetch(
-        `https://yyadavrrohit-001-site4.rtempurl.com/api/Order/GetOrderHome?${
+        `https://localhost:7104/api/Order/GetOrderHome?${
           userId ? `&userId=${userId}` : ""
         }`,
         {
@@ -323,9 +323,9 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                             {getStatusText(item.orderStatusId)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500">
+                        {/* <p className="text-sm text-gray-500">
                           {formatPortionText(item)}
-                        </p>
+                        </p> */}
                         {item.specialInstructions && (
                           <div className="bg-yellow-50 p-2 rounded border border-yellow-200 mt-2">
                             <p className="text-xs font-medium text-yellow-800">
