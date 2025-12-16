@@ -202,9 +202,9 @@ const RestaurantApp = () => {
 
 
       const orderData = {
-        customerName, // 
-        userPhone,    // 
-        userName: 2, // 
+        customerName, 
+        userPhone,    
+        userName: 2, 
         userId: userId,
         OrderType: "Online", //
         // address: address || "",  //
@@ -296,7 +296,7 @@ useEffect(() => {
           groupedItemsBySubcategory[subId].push({
             ...item,
             id: item.itemId,
-            name: item.itemName, // ✅ always set name for search
+            name: item.itemName, 
             imageData:
               item.imageSrc && item.imageSrc.length > 50 ? item.imageSrc : null,
             prices: {
