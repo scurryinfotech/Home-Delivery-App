@@ -17,8 +17,6 @@ const ForgotPassword = ({ onBackToLogin }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-
-
   useEffect(() => {
     if (timer > 0) {
       const i = setInterval(() => setTimer((p) => p - 1), 1000);
@@ -54,6 +52,24 @@ const ForgotPassword = ({ onBackToLogin }) => {
     return list;
   };
 
+  const checkPhoneExists = async (phone) => {
+    try {
+      const res = await fetch(
+        `https://localhost:7104/api/Order/CheckPhoneExists?phone=${phone}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      const data = await res.json();
+      return { exists: data.exists, success: res.ok };
+    } catch (err) {
+      console.error("Error checking phone:", err);
+      return { exists: false, success: false, error: "Network error" };
+    }
+  };
+
   const handleSendOTP = async () => {
     if (formData.phone.length !== 10) {
       setErrors({ phone: "Enter valid 10-digit phone" });
@@ -61,8 +77,25 @@ const ForgotPassword = ({ onBackToLogin }) => {
     }
 
     setIsLoading(true);
+    setErrors({});
 
     try {
+      // Step 1: Check if phone exists in system
+      const checkResult = await checkPhoneExists(formData.phone);
+
+      if (!checkResult.success) {
+        setErrors({ phone: checkResult.error || "Failed to verify phone number" });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!checkResult.exists) {
+        setErrors( "Phone number not registered!" );
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 2: Phone exists, proceed to send OTP
       const res = await fetch(
         "https://localhost:7104/api/Otp/send",
         {
@@ -73,10 +106,11 @@ const ForgotPassword = ({ onBackToLogin }) => {
           }),
         }
       );
-      toast.success("OTP sent to your phone!");
+
       const data = await res.json();
 
       if (res.ok && data.session_id) {
+        toast.success("OTP sent to your phone!");
         localStorage.setItem("fp_session_id", data.session_id);
 
         setStep(2);
@@ -84,9 +118,11 @@ const ForgotPassword = ({ onBackToLogin }) => {
         setCanResend(false);
       } else {
         setErrors({ submit: data.message || "Failed to send OTP" });
+        toast.error(data.message || "Failed to send OTP");
       }
     } catch (err) {
       setErrors({ submit: "Network error" });
+      toast.error("Network error. Please try again.");
     }
 
     setIsLoading(false);
@@ -128,25 +164,26 @@ const ForgotPassword = ({ onBackToLogin }) => {
           }),
         }
       );
-      toast.success("OTP verified!");
+
       const data = await res.json();
 
       if (res.ok && data.success) {
+        toast.success("OTP verified!");
         setStep(3);
         setErrors({});
       } else {
         setErrors({ otp: "Incorrect OTP" });
+        toast.error("Incorrect OTP");
       }
     } catch (err) {
       setErrors({ otp: "Network error" });
+      toast.error("Network error");
     }
 
     setIsLoading(false);
   };
 
   const handleResetPassword = async () => {
-
-    debugger;
     const err = {};
 
     const pwErrors = validatePassword(formData.newPassword);
@@ -161,7 +198,6 @@ const ForgotPassword = ({ onBackToLogin }) => {
       return;
     }
 
-
     setIsLoading(true);
 
     try {
@@ -171,24 +207,25 @@ const ForgotPassword = ({ onBackToLogin }) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            phone: formData.phone,
+            phone: "+91" + formData.phone,
             newPassword: formData.newPassword,
           }),
         }
       );
-      debugger;
+
       const data = await res.json();
 
       if (res.ok) {
         localStorage.removeItem("fp_session_id");
         toast.success("Password reset successful!");
-
         onBackToLogin();
       } else {
         setErrors({ submit: data.message || "Reset failed" });
+        toast.error(data.message || "Reset failed");
       }
     } catch (err) {
       setErrors({ submit: "Network error" });
+      toast.error("Network error");
     }
 
     setIsLoading(false);
@@ -213,14 +250,18 @@ const ForgotPassword = ({ onBackToLogin }) => {
               placeholder="Enter your phone"
               onChange={handleChange}
               value={formData.phone}
+              disabled={isLoading}
             />
-            {errors.phone && <p className="text-red-600">{errors.phone}</p>}
+            {errors.phone && (
+              <p className="text-red-600 text-sm mt-1">{errors.phone}</p>
+            )}
 
             <button
               onClick={handleSendOTP}
-              className="w-full mt-5 p-3 bg-teal-500 text-white rounded-lg"
+              className="w-full mt-5 p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              disabled={isLoading}
             >
-              Send OTP
+              {isLoading ? "Checking..." : "Send OTP"}
             </button>
           </>
         )}
@@ -228,6 +269,9 @@ const ForgotPassword = ({ onBackToLogin }) => {
         {/* -------- Step 2: OTP -------- */}
         {step === 2 && (
           <>
+            <p className="text-sm text-gray-600 mb-3 text-center">
+              OTP sent to +91 {formData.phone}
+            </p>
             <input
               type="text"
               name="otp"
@@ -235,22 +279,32 @@ const ForgotPassword = ({ onBackToLogin }) => {
               placeholder="Enter OTP"
               onChange={handleChange}
               value={formData.otp}
+              disabled={isLoading}
             />
-            {errors.otp && <p className="text-red-600">{errors.otp}</p>}
-
-            {timer > 0 ? (
-              <p className="text-center mt-2">Resend OTP in {timer}s</p>
-            ) : (
-              <button className="text-purple-600 mt-2" onClick={handleResendOTP}>
-                Resend OTP
-              </button>
+            {errors.otp && (
+              <p className="text-red-600 text-sm mt-1 text-center">{errors.otp}</p>
             )}
+
+            <div className="text-center mt-2">
+              {timer > 0 ? (
+                <p className="text-gray-600">Resend OTP in {timer}s</p>
+              ) : (
+                <button
+                  className="text-teal-600 hover:text-teal-700 font-medium"
+                  onClick={handleResendOTP}
+                  disabled={isLoading}
+                >
+                  Resend OTP
+                </button>
+              )}
+            </div>
 
             <button
               onClick={handleVerifyOTP}
-              className="w-full mt-5 p-3 bg-teal-500 text-white rounded-lg"
+              className="w-full mt-5 p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              disabled={isLoading}
             >
-              Verify OTP
+              {isLoading ? "Verifying..." : "Verify OTP"}
             </button>
           </>
         )}
@@ -266,6 +320,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
                 placeholder="New Password"
                 onChange={handleChange}
                 value={formData.newPassword}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -285,7 +340,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
               </button>
             </div>
             {errors.newPassword && (
-              <p className="text-red-600">{errors.newPassword}</p>
+              <p className="text-red-600 text-sm mt-1">{errors.newPassword}</p>
             )}
 
             <div className="relative mt-3">
@@ -296,6 +351,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
                 placeholder="Confirm Password"
                 onChange={handleChange}
                 value={formData.confirmPassword}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -315,24 +371,25 @@ const ForgotPassword = ({ onBackToLogin }) => {
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="text-red-600">{errors.confirmPassword}</p>
+              <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>
             )}
 
             {errors.submit && (
-              <p className="text-red-600 mt-2">{errors.submit}</p>
+              <p className="text-red-600 text-sm mt-2 text-center">{errors.submit}</p>
             )}
 
             <button
               onClick={handleResetPassword}
-              className="w-full mt-5 p-3 bg-teal-500 text-white rounded-lg"
+              className="w-full mt-5 p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              disabled={isLoading}
             >
-              Reset Password
+              {isLoading ? "Resetting..." : "Reset Password"}
             </button>
           </>
         )}
 
         <button
-          className="w-full mt-5 text-purple-600"
+          className="w-full mt-5 text-teal-600 hover:text-teal-700 font-medium"
           onClick={onBackToLogin}
         >
           ← Back to Login
