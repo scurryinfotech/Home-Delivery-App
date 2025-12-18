@@ -120,7 +120,7 @@ const RestaurantApp = () => {
       </p>
 
       <p style="margin-top: 10px; font-size: 14px; color:#444; line-height: 20px;">
-        Order will be served within 10 to 15 minutes.  
+        Order will be delivered within 25 to 30 minutes.  
         Thank you!
       </p>
     </div>
@@ -171,7 +171,7 @@ const RestaurantApp = () => {
   const fetchRestaurantStatus = async () => {
   try {
     const response = await axios.get(
-      "https://localhost:7104/api/Order/GetAvailabilityOnline"
+      "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetAvailabilityOnline"
     );
 
     
@@ -219,7 +219,7 @@ const RestaurantApp = () => {
         })),
       };
 
-      await axios.post("https://localhost:7104/api/Order/PlaceOnlineOrder", orderData, {
+      await axios.post("https://grillnshakesapi.scurryinfotechllp.com/api/Order/PlaceOnlineOrder", orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -255,15 +255,15 @@ useEffect(() => {
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuCategory?username=Grill_N_Shakes",
+            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
+            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuItem?username=Grill_N_Shakes",
+            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuItem?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
         ]);

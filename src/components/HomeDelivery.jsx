@@ -234,7 +234,7 @@ const handleAuthSuccess = (authData) => {
         })),
       };
 
-      await axios.post("https://localhost:7104/api/Order/Post", orderData, {
+      await axios.post("https://grillnshakesapi.scurryinfotechllp.com/api/Order/Post", orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

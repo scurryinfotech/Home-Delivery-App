@@ -18,14 +18,14 @@ const AuthContainer = ({ onAuthSuccess }) => {
       loginame: loginData.phone,      
       Password: loginData.password
     };
-    debugger;
+   
     const response = await axios.post(
-      'https://localhost:7104/api/Order/Login',
+      'https://grillnshakesapi.scurryinfotechllp.com/api/Order/Login',
       payload
     );
 
     if (response.data.success) {
-      debugger;
+      
       localStorage.setItem('userId', response.data.user.userId);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('loginame', response.data.user.loginame);
@@ -62,7 +62,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
       };
       const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q"
       const response = await axios.post(
-        'https://localhost:7104/api/Order/AddUser',
+        'https://grillnshakesapi.scurryinfotechllp.com/api/Order/AddUser',
         payload,
         {
         headers: {
@@ -85,7 +85,6 @@ const AuthContainer = ({ onAuthSuccess }) => {
  else {
         throw new Error(response.data.message || 'Signup failed');
       }
-      debugger;
     } catch (error) {
       setAuthError(error.response?.data?.message || error.message);
       throw error;
