@@ -9,11 +9,25 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
+   useEffect(() => {
+    if (!selectedOrder) return;
+
+    const updatedOrder = orders.find(
+      (o) => o.orderId === selectedOrder.orderId
+    );
+
+    if (updatedOrder) {
+      setSelectedOrder(updatedOrder);
+    }
+  }, [orders])
+
   useEffect(() => {
     fetchOrders();
-    const fetchInterval = setInterval(fetchOrders, 30000);
+    const fetchInterval = setInterval(fetchOrders, 15000);
     return () => clearInterval(fetchInterval);
   }, []);
+
+  debugger;
 
   const getTableNumber = () => {
     return (
@@ -80,10 +94,10 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     return ordersArray.sort((a, b) => {
       // Priority order: 1 (Order Placed) > 2 (Preparing) > 3 (Delivered)
       const statusPriority = {
-        1: 1, // Highest priority - Order Placed
-        2: 2, // Medium priority - Preparing
-        3: 3, // Lowest priority - Delivered
-        4: 4  // Cancelled orders at the end
+        1: 1, // Highest priority - Order Place
+        2: 2, // Medium priority - Preparin
+        3: 3, // Lowest priority - Delivere
+        4: 4  // Cancelled orders at the en
       };
 
       const priorityA = statusPriority[a.orderStatusId] || 5;
@@ -306,7 +320,9 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                       Special Instructions:
                     </p>
                     <p className="text-xs text-yellow-700">
-                      {selectedOrder.specialInstructions || "None"}
+                      <p className="text-xs text-yellow-700">
+                        {selectedOrder.items.find(i => i.specialInstructions)?.specialInstructions || "None"}
+                      </p>
                     </p>
                   </div>
 
