@@ -307,7 +307,7 @@ useEffect(() => {
         });
         setMenuItems(groupedItemsBySubcategory);
       } catch (err) {
-        toast.error("Failed to load menu data. Please try again later.");
+        // toast.error("Failed to load menu data. Please try again later.");
         setError(err);
       } finally {
         setIsLoading(false);
