@@ -17,7 +17,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     );
 
     if (updatedOrder) {
-      setSelectedOrder(updatedOrder);
+      setSelectedOrder(updatedOrder); 
     }
   }, [orders])
 
