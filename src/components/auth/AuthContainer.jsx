@@ -13,23 +13,27 @@ const AuthContainer = ({ onAuthSuccess }) => {
   try {
     setAuthError('');
 
-    // Build payload matching UserModel (case-sensitive)
+  
     const payload = {
       loginame: loginData.phone,      
       Password: loginData.password
     };
-   
+    
+    
     const response = await axios.post(
-      'https://grillnshakesapi.scurryinfotechllp.com/api/Order/Login',
+      'https://localhost:7104/api/Order/Login',
       payload
     );
 
     if (response.data.success) {
-      
+
+    
+
       localStorage.setItem('userId', response.data.user.userId);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('loginame', response.data.user.loginame);
       toast.success('Login successful!');
+      await getCustomerAddress();
       onAuthSuccess({
         user: response.data.user,
         token: response.data.token,
@@ -39,7 +43,15 @@ const AuthContainer = ({ onAuthSuccess }) => {
       throw new Error(response.data.message || 'Login failed');
     }
   } catch (error) {
-    setAuthError(error.response?.data?.message || error.message);
+  
+    
+    const errorMessage = error.response?.data?.message 
+      || error.response?.data?.title
+      || error.response?.data
+      || error.message 
+      || 'Login failed';
+    
+    setAuthError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     throw error;
   }
 };
@@ -62,7 +74,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
       };
       const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q"
       const response = await axios.post(
-        'https://grillnshakesapi.scurryinfotechllp.com/api/Order/AddUser',
+        'https://localhost:7104/api/Order/AddUser',
         payload,
         {
         headers: {
@@ -72,6 +84,8 @@ const AuthContainer = ({ onAuthSuccess }) => {
       );
 
       if (response.data.success) {
+        
+  
   localStorage.setItem("userId", response.data.user.userId);
   localStorage.setItem("token", response.data.token);
   localStorage.setItem("loginame", response.data.user.loginame);
@@ -90,6 +104,16 @@ const AuthContainer = ({ onAuthSuccess }) => {
       throw error;
     }
   };
+
+  const getCustomerAddress = async () => {
+  const userId = localStorage.getItem("userId");
+  const response = await axios.get(
+    "https://localhost:7104/api/Order/GetCustomerAddress",
+  { params: { userId } }
+  );
+    localStorage.setItem("Address", JSON.stringify(response.data.address));
+  return response.data.address;
+};
 
   // ------------------ SWITCH VIEWS ------------------
   const handleSwitchToSignup = () => {

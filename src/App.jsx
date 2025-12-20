@@ -171,7 +171,7 @@ const RestaurantApp = () => {
   const fetchRestaurantStatus = async () => {
   try {
     const response = await axios.get(
-      "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetAvailabilityOnline"
+      "https://localhost:7104/api/Order/GetAvailabilityOnline"
     );
 
     
@@ -219,7 +219,7 @@ const RestaurantApp = () => {
         })),
       };
 
-      await axios.post("https://grillnshakesapi.scurryinfotechllp.com/api/Order/PlaceOnlineOrder", orderData, {
+      await axios.post("https://localhost:7104/api/Order/PlaceOnlineOrder", orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -255,15 +255,15 @@ useEffect(() => {
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
-            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuCategory?username=Grill_N_Shakes",
+            "https://localhost:7104/api/Order/GetMenuCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
+            "https://localhost:7104/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuItem?username=Grill_N_Shakes",
+            "https://localhost:7104/api/Order/GetMenuItem?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
         ]);

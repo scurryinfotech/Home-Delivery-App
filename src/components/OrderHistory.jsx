@@ -125,7 +125,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       const actualTableNo = getTableNumber();
       const userId = localStorage.getItem("userId");
       const response = await fetch(
-        `https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetOrderHome?${userId ? `&userId=${userId}` : ""
+        `https://localhost:7104/api/Order/GetOrderHome?${userId ? `&userId=${userId}` : ""
         }`,
         {
           headers: {

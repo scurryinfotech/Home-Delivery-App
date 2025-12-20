@@ -32,6 +32,11 @@ const CartModal = ({
   // Load phone number from localStorage on component mount
   useEffect(() => {
     const savedPhone = localStorage.getItem("loginame");
+    const address = localStorage.getItem("Address");
+    if (address) {
+      const parsedAddress = JSON.parse(address);
+      setAddress(parsedAddress);
+    }
     if (savedPhone) {
       setUserPhone(savedPhone);
     }
