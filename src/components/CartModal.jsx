@@ -34,8 +34,7 @@ const CartModal = ({
     const savedPhone = localStorage.getItem("loginame");
     const address = localStorage.getItem("Address");
     if (address) {
-      const parsedAddress = JSON.parse(address);
-      setAddress(parsedAddress);
+      setAddress(address || "");
     }
     if (savedPhone) {
       setUserPhone(savedPhone);

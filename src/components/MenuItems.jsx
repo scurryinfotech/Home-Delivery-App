@@ -13,24 +13,28 @@ const MenuItems = ({
 
   return (
     <div className="flex gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow bg-white">
-      
+
       {/* Image */}
       <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
-        {item.imageData ? (
+        {item.imagePath ? (
           <img
-            src={`data:image/jpeg;base64,${item.imageData}`}
-            alt={item.name}
+            src={item.imagePath}
+            alt={item.itemName}
             className={`w-full h-full object-cover ${!isAvailable ? 'opacity-50' : ''}`}
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = "";
+            }}
           />
         ) : (
           <span className="text-2xl">🍽️</span>
         )}
+
       </div>
 
       {/* Content */}
       <div className="flex flex-col flex-grow justify-between">
-        
+
         <div>
           <h3 className={`text-sm font-semibold leading-tight break-words ${!isAvailable ? 'opacity-60' : ''}`}>
             {item.name}
@@ -39,7 +43,7 @@ const MenuItems = ({
 
           {!isAvailable && (
             <p className="text-xs text-red-500 font-bold mt-1">
-                * Item Currently Unavailable
+              * Item Currently Unavailable
             </p>
           )}
         </div>

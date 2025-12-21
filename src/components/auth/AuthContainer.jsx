@@ -111,7 +111,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
     "https://localhost:7104/api/Order/GetCustomerAddress",
   { params: { userId } }
   );
-    localStorage.setItem("Address", JSON.stringify(response.data.address));
+    localStorage.setItem("Address", response.data.address);
   return response.data.address;
 };
 
