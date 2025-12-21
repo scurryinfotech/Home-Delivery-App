@@ -306,12 +306,12 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  {/* {selectedOrder.orderStatusId === 2 ? (
+                  {selectedOrder.orderStatusId === 2 ? (
                     <OrderCountdownTimer
                       modifiedDate={selectedOrder.modifiedDate}
-                      durationMinutes={10}
+                      durationMinutes={30}
                     />
-                  ) : {( */}
+                  ) : ( 
                   <div>
                     <p className="text-sm text-gray-600">
                       {getStatusText(selectedOrder.orderStatusId)}
@@ -326,7 +326,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                     </p>
                   </div>
 
-                  {/* )} */}
+                   )} 
                 </div>
               </div>
             </div>
