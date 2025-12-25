@@ -1,1 +1,1 @@
-export const API_BASE_URL = "https://grillnshakesapi.scurryinfotechllp.com";
+export const API_BASE_URL = "https://localhost:7104";

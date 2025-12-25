@@ -55,7 +55,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
   const checkPhoneExists = async (phone) => {
     try {
       const res = await fetch(
-        `https://grillnshakesapi.scurryinfotechllp.com/api/Order/CheckPhoneExists?phone=${phone}`,
+        `https://localhost:7104/api/Order/CheckPhoneExists?phone=${phone}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -97,7 +97,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
       }
 
       const res = await fetch(
-        "https://grillnshakesapi.scurryinfotechllp.com/api/Otp/send",
+        "https://localhost:7104/api/Otp/send",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -151,7 +151,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://grillnshakesapi.scurryinfotechllp.com/api/Otp/verify",
+        "https://localhost:7104/api/Otp/verify",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -199,7 +199,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
     try {
       const res = await fetch(
-        "https://grillnshakesapi.scurryinfotechllp.com/api/Order/ResetPassword",
+        "https://localhost:7104/api/Order/ResetPassword",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

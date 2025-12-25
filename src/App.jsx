@@ -250,16 +250,19 @@ useEffect(() => {
     const fetchData = async () => {
       
       try {
+        // show loader & clear old errors
+        setIsLoading(true);
+        setError(null);
         const token =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q";
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q"; 
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
-            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuCategory?username=Grill_N_Shakes",
+            "https://localhost:7104/api/Order/GetMenuCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104tegory?username=Grill_N_Shakes",
+            "https://localhost:7104/api/Order/GetMenuSubCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
@@ -268,7 +271,6 @@ useEffect(() => {
           ),
         ]);
 
-        // Categories
         setCategories(catRes.data || []);
 
         // Expand ALL categories by default (keyed by categoryId)
@@ -307,8 +309,9 @@ useEffect(() => {
         });
         setMenuItems(groupedItemsBySubcategory);
       } catch (err) {
-        // toast.error("Failed to load menu data. Please try again later.");
-        setError(err);
+        console.error("Failed to load menu data", err);
+        toast.error("Failed to load menu data. Please try again later.");
+        setError(err?.message || String(err));
       } finally {
         setIsLoading(false);
       }
@@ -541,7 +544,8 @@ useEffect(() => {
             <Loader />
           ) : error ? (
             <div className="text-black-500 text-center mt-10">
-              Error Occured While Loading Data
+              <p className="font-semibold">Error Occurred While Loading Data</p>
+              <p className="text-sm text-gray-600 mt-2">{String(error)}</p>
             </div>
           ) : (
             <>

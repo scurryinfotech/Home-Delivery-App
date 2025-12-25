@@ -18,7 +18,7 @@ const MenuItems = ({
       <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
         {item.imagePath ? (
           <img
-            src={`/${item.imagePath.replace(/^public\//, "")}`}
+            src={`/${item.imagePath.replace(/^public\//, "public")}`}
             alt={item.itemName}
             className={`w-full h-full object-cover ${!isAvailable ? "opacity-50" : ""
               }`}
