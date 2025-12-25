@@ -255,11 +255,11 @@ useEffect(() => {
 
         const [catRes, subcatRes, itemRes] = await Promise.all([
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuCategory?username=Grill_N_Shakes",
+            "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetMenuCategory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(
-            "https://localhost:7104/api/Order/GetMenuSubcategory?username=Grill_N_Shakes",
+            "https://localhost:7104tegory?username=Grill_N_Shakes",
             { headers: { Authorization: `Bearer ${token}` } }
           ),
           axios.get(

@@ -18,17 +18,19 @@ const MenuItems = ({
       <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
         {item.imagePath ? (
           <img
-            src={item.imagePath}
+            src={`/${item.imagePath.replace(/^public\//, "")}`}
             alt={item.itemName}
-            className={`w-full h-full object-cover ${!isAvailable ? 'opacity-50' : ''}`}
+            className={`w-full h-full object-cover ${!isAvailable ? "opacity-50" : ""
+              }`}
             loading="lazy"
             onError={(e) => {
-              e.currentTarget.src = "";
+              e.currentTarget.src = "/images/placeholder.png"; // optional fallback
             }}
           />
         ) : (
           <span className="text-2xl">🍽️</span>
         )}
+
 
       </div>
 

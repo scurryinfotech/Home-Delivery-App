@@ -21,7 +21,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
     
     
     const response = await axios.post(
-      'https://localhost:7104/api/Order/Login',
+      'https://localhost:7104
       payload
     );
 
@@ -32,12 +32,12 @@ const AuthContainer = ({ onAuthSuccess }) => {
       localStorage.setItem('userId', response.data.user.userId);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('loginame', response.data.user.loginame);
-      toast.success('Login successful!');
+      
       await getCustomerAddress();
       onAuthSuccess({
         user: response.data.user,
         token: response.data.token,
-        type: 'login',
+        type: 'login'
       });
     } else {
       throw new Error(response.data.message || 'Login failed');
@@ -74,7 +74,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
       };
       const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkdyaWxsX05fU2hha2VzIiwibmJmIjoxNzU5MTMyMzY3LCJleHAiOjE3NjY5MDgzNjcsImlhdCI6MTc1OTEzMjM2N30.ko8YPHfApg0uN0k3kUTLcJXpZp-2s-6TiRHpsiab42Q"
       const response = await axios.post(
-        'https://localhost:7104/api/Order/AddUser',
+        'https://grillnshakesapi.scurryinfotechllp.com/api/Order/AddUser',
         payload,
         {
         headers: {
@@ -108,7 +108,7 @@ const AuthContainer = ({ onAuthSuccess }) => {
   const getCustomerAddress = async () => {
   const userId = localStorage.getItem("userId");
   const response = await axios.get(
-    "https://localhost:7104/api/Order/GetCustomerAddress",
+    "https://grillnshakesapi.scurryinfotechllp.com/api/Order/GetCustomerAddress",
   { params: { userId } }
   );
     localStorage.setItem("Address", response.data.address);

@@ -77,7 +77,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
     setSendingOtp(true);
 
     try {
-      const res = await fetch("https://localhost:7104/api/Otp/send", {
+      const res = await fetch("https://grillnshakesapi.scurryinfotechllp.com/api/Otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +119,7 @@ const Signup = ({ onSwitchToLogin, onSignup }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch("https://localhost:7104/api/Otp/verify", {
+      const res = await fetch("https://grillnshakesapi.scurryinfotechllp.com/api/Otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
