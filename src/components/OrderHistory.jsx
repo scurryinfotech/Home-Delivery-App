@@ -23,7 +23,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
 
   useEffect(() => {
     fetchOrders();
-    const fetchInterval = setInterval(fetchOrders, 15000);
+    const fetchInterval = setInterval(fetchOrders, 5000);
     return () => clearInterval(fetchInterval);
   }, []);
 
