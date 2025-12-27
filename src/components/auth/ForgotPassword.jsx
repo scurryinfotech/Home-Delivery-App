@@ -61,7 +61,7 @@ const ForgotPassword = ({ onBackToLogin }) => {
           headers: { "Content-Type": "application/json" },
         }
       );
-
+      debugger
       const data = await res.json();
       return { exists: data.exists, success: res.ok };
     } catch (err) {

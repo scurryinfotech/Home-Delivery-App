@@ -67,32 +67,26 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     return Object.values(grouped);
   };
 
-  // NEW: Determine overall order status based on all items
   const determineOrderStatus = (items) => {
     const statuses = items.map(item => item.orderStatusId);
 
-    // If any item is cancelled, check if all are cancelled
     const allCancelled = statuses.every(s => s === 5);
     if (allCancelled) return 5;
 
-    // If all items are delivered (ignoring cancelled ones)
     const nonCancelledStatuses = statuses.filter(s => s !== 5);
     if (nonCancelledStatuses.length > 0) {
       const allDelivered = nonCancelledStatuses.every(s => s === 4);
       if (allDelivered) return 4;
 
-      // If any item is still being prepared or waiting, use the lowest status
       const minStatus = Math.min(...nonCancelledStatuses);
       return minStatus;
     }
 
-    // Default to the first item's status
     return items[0].orderStatusId;
   };
 
   const sortOrders = (ordersArray) => {
     return ordersArray.sort((a, b) => {
-      // Priority order: 1 (Order Placed) > 2 (Preparing) > 3 (Delivered)
       const statusPriority = {
         1: 1, // Highest priority - Order Place
         2: 2, // Medium priority - Preparin
@@ -103,12 +97,10 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       const priorityA = statusPriority[a.orderStatusId] || 5;
       const priorityB = statusPriority[b.orderStatusId] || 5;
 
-      // First sort by status priority
       if (priorityA !== priorityB) {
         return priorityA - priorityB;
       }
 
-      // If same status, sort by creation date (newer first)
       const dateA = new Date(a.createdDate || 0);
       const dateB = new Date(b.createdDate || 0);
       return dateB - dateA;
@@ -194,7 +186,6 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     return basePrice * quantity;
   };
 
-  // NEW: Calculate total price for all items in grouped order (excluding cancelled items)
   const calculateGroupTotalPrice = (groupedOrder) => {
     return groupedOrder.items.reduce((total, item) => {
       // Don't add price for cancelled items
@@ -385,7 +376,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                 </div> */}
                 <div className="flex justify-between font-bold text-base pt-2 border-t">
                   <span>Total</span>
-                  <span>₹{totalPrice}</span>
+                  <span>₹{totalPrice - selectedOrder.discount}</span>
                 </div>
               </div>
             </div>

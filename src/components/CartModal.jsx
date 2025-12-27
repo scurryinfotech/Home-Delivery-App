@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Minus, Trash2, MapPin, Truck, AlertCircle, ShoppingBag } from "lucide-react";
+import { Plus, Minus, Trash2, MapPin, Truck, AlertCircle, ShoppingBag, ChevronDown, ChevronUp } from "lucide-react";
 
 const CartModal = ({
   cart,
@@ -10,6 +10,7 @@ const CartModal = ({
   setShowCart,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [showAddressSection, setShowAddressSection] = useState(false); // New state for collapsible
   const [customerName, setCustomerName] = useState("");
   const [userPhone, setUserPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -33,9 +34,11 @@ const CartModal = ({
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("loginame");
-    const address = localStorage.getItem("Address");
-    if (address) {
-      setAddress(address || "");
+    const savedAddress = localStorage.getItem("Address");
+    if (savedAddress && savedAddress !== "undefined") {
+      setAddress(savedAddress);
+    } else {
+      setAddress("");
     }
     if (savedPhone) {
       setUserPhone(savedPhone);
@@ -70,16 +73,17 @@ const CartModal = ({
     }
 
     // Validate if address contains valid location
-    const isValidLocation = deliveryType === "Home Delivery" 
-      ? /ulwe|kharkopar|bamandongri/i.test(address.trim()) 
+    const normalizedAddress = (address || "").trim();
+    const isValidLocation = deliveryType === "Home Delivery"
+      ? /ulwe|kharkopar|bamandongri/i.test(normalizedAddress)
       : true;
 
     // Check for validation errors
     const newErrors = {
       name: !customerName.trim(),
       phone: !/^[0-9]{10}$/.test(userPhone),
-      address: deliveryType === "Home Delivery" && !address.trim(),
-      location: deliveryType === "Home Delivery" && address.trim() && !isValidLocation,
+      address: deliveryType === "Home Delivery" && !normalizedAddress,
+      location: deliveryType === "Home Delivery" && normalizedAddress && !isValidLocation,
     };
 
     setErrors(newErrors);
@@ -117,7 +121,6 @@ const CartModal = ({
       finalTotal: finalTotal,
     });
   };
-
   return (
     <div className="fixed inset-0 bg-teal bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
       <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] sm:max-h-[80vh] overflow-y-auto shadow-xl">
@@ -132,7 +135,6 @@ const CartModal = ({
             </button>
           </div>
         </div>
-
         <div className="p-3 sm:p-4">
           {cart.length === 0 ? (
             <p className="text-gray-500 text-center py-8 text-sm sm:text-base">
@@ -185,7 +187,6 @@ const CartModal = ({
                   </div>
                 </div>
               ))}
-
               <div className={`mt-4 p-3 rounded-lg ${
                 canProceed 
                   ? 'bg-green-50 border border-green-200' 
@@ -220,7 +221,6 @@ const CartModal = ({
                     )}
                   </div>
                 </div>
-
                 {!canProceed && (
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -242,10 +242,10 @@ const CartModal = ({
                   <span className="text-gray-900 font-semibold">₹{subtotal}</span>
                 </div>
                 
-                <div className="flex justify-between items-center text-sm">
+                {/* <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-700">Delivery Charge:</span>
                   <span className="text-green-600 font-semibold">FREE</span>
-                </div>
+                </div> */}
 
                 <div className="border-t pt-2 flex justify-between items-center">
                   <span className="text-base text-gray-800 font-semibold">Total Amount:</span>
@@ -256,6 +256,20 @@ const CartModal = ({
               {/* User Details Form */}
               {showDetails ? (
                 <div className="mt-4 space-y-4">
+                   {/* Special Instructions */}
+                  <div>
+                    <label className="text-gray-700 font-medium block mb-2">
+                      Special Instructions (Optional)
+                    </label>
+                    <textarea
+                      value={instructions}
+                      onChange={(e) => setInstructions(e.target.value)}
+                      placeholder="E.g. No onion, extra spicy, call on arrival"
+                      rows="2"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
+                    />
+                  </div>
+                  
                   {/* Name */}
                   <div>
                     <label className="text-gray-700 font-medium block mb-2">
@@ -315,73 +329,77 @@ const CartModal = ({
                     )}
                   </div>
 
-                  {/* Delivery Type */}
-                  <div>
-                    <label className="text-gray-700 font-medium block mb-2">
-                      Delivery Type
-                    </label>
-                    <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
-                      Home Delivery
-                    </div>
-                  </div>
-
-                  {/* Address (only if Home Delivery) */}
+                  {/* Collapsible Address Section (only if Home Delivery) */}
                   {deliveryType === "Home Delivery" && (
-                    <div>
-                      <label className="text-gray-700 font-medium block mb-2">
-                        Delivery Address <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        value={address}
-                        onChange={(e) => {
-                          setAddress(e.target.value);
-                          if (e.target.value.trim()) {
-                            setErrors((prev) => ({ ...prev, address: false }));
-                          }
-                          // Check if location is valid
-                          if (/ulwe|kharkopar|bamandongri/i.test(e.target.value)) {
-                            setErrors((prev) => ({ ...prev, location: false }));
-                          }
-                        }}
-                        placeholder="Enter your complete address in Ulwe, Kharkopar or Bamandongri, Navi Mumbai"
-                        rows="3"
-                        className={`w-full p-3 border rounded-lg focus:ring-2 outline-none transition-all ${
-                          errors.address || errors.location
-                            ? "border-red-500 focus:ring-red-400 bg-red-50"
-                            : "border-gray-300 focus:ring-green-400"
+                    <div className="border border-gray-300 rounded-lg overflow-hidden">
+                      {/* Header - Click to expand/collapse */}
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressSection(!showAddressSection)}
+                        className={`w-full p-4 flex items-center justify-between bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-150 transition-all ${
+                          errors.address || errors.location ? 'border-l-4 border-red-500' : ''
                         }`}
-                      />
-                      {errors.address && (
-                        <p className="text-red-500 text-sm mt-1">
-                          Address is required
-                        </p>
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="text-green-600" size={20} />
+                          <span className="text-gray-700 font-medium">
+                            Delivery Address <span className="text-red-500">*</span>
+                          </span>
+                          {(address || "").trim() && !errors.address && !errors.location && (
+                            <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
+                              Added ✓
+                            </span>
+                          )}
+                        </div>
+                        {showAddressSection ? (
+                          <ChevronUp className="text-gray-600" size={20} />
+                        ) : (
+                          <ChevronDown className="text-gray-600" size={20} />
+                        )}
+                      </button>
+
+                      {/* Collapsible Content */}
+                      {showAddressSection && (
+                        <div className="p-4 bg-white">
+                          <textarea
+                            value={address}
+                            onChange={(e) => {
+                              setAddress(e.target.value);
+                              if (e.target.value.trim()) {
+                                setErrors((prev) => ({ ...prev, address: false }));
+                              }
+                              // Check if location is valid
+                              if (/ulwe|kharkopar|bamandongri/i.test(e.target.value)) {
+                                setErrors((prev) => ({ ...prev, location: false }));
+                              }
+                            }}
+                            placeholder="Enter your complete address in Ulwe, Kharkopar or Bamandongri, Navi Mumbai"
+                            rows="3"
+                            className={`w-full p-3 border rounded-lg focus:ring-2 outline-none transition-all ${
+                              errors.address || errors.location
+                                ? "border-red-500 focus:ring-red-400 bg-red-50"
+                                : "border-gray-300 focus:ring-green-400"
+                            }`}
+                          />
+                          {errors.address && (
+                            <p className="text-red-500 text-sm mt-1">
+                              Address is required
+                            </p>
+                          )}
+                          {errors.location && (
+                            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                              <MapPin size={14} />
+                              Please enter an address in Ulwe, Kharkopar or Bamandongri, Navi Mumbai
+                            </p>
+                          )}
+                          <p className="text-green-600 text-xs mt-2 font-medium flex items-center gap-1">
+                            <MapPin size={12} />
+                            Delivery available in Ulwe, Kharkopar, Bamandongri area only
+                          </p>
+                        </div>
                       )}
-                      {errors.location && (
-                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                          <MapPin size={14} />
-                          Please enter an address in Ulwe, Kharkopar or Bamandongri, Navi Mumbai
-                        </p>
-                      )}
-                      <p className="text-green-600 text-xs mt-2 font-medium flex items-center gap-1">
-                        <MapPin size={12} />
-                        Delivery available in Ulwe, Kharkopar, Bamandongri area only
-                      </p>
                     </div>
                   )}
-
-                  {/* Special Instructions */}
-                  <div>
-                    <label className="text-gray-700 font-medium block mb-2">
-                      Special Instructions (Optional)
-                    </label>
-                    <textarea
-                      value={instructions}
-                      onChange={(e) => setInstructions(e.target.value)}
-                      placeholder="E.g. No onion, extra spicy, call on arrival"
-                      rows="2"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
-                    />
-                  </div>
 
                   <button
                     onClick={handleFinalOrder}
@@ -409,8 +427,8 @@ const CartModal = ({
                   }`}
                 >
                   {canProceed 
-                    ? `Place Order - ₹${finalTotal} (COD)`
-                    : `Add ₹${amountNeededForMinOrder} more (Min ₹${MIN_ORDER_AMOUNT})`
+                  ? `Place Order - ₹${finalTotal} (COD)`
+                  : `Add ₹${amountNeededForMinOrder} more (Min ₹${MIN_ORDER_AMOUNT})`
                   }
                 </button>
               )}
