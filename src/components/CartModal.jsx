@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Minus, Trash2, MapPin, Truck, AlertCircle, ShoppingBag, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Trash2,
+  MapPin,
+  Truck,
+  AlertCircle,
+  ShoppingBag,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import axios from "axios";
 
 const CartModal = ({
   cart,
@@ -16,6 +27,7 @@ const CartModal = ({
   const [address, setAddress] = useState("");
   const [deliveryType, setDeliveryType] = useState("Home Delivery");
   const [instructions, setInstructions] = useState("");
+  const [discounts, setDiscounts] = useState(null);
 
   // Constants for delivery
   const MIN_ORDER_AMOUNT = 150;
@@ -35,6 +47,8 @@ const CartModal = ({
   useEffect(() => {
     const savedPhone = localStorage.getItem("loginame");
     const savedAddress = localStorage.getItem("Address");
+    fetchData();
+
     if (savedAddress && savedAddress !== "undefined") {
       setAddress(savedAddress);
     } else {
@@ -45,7 +59,18 @@ const CartModal = ({
     }
   }, []);
 
-  // Calculate subtotal amount
+  const fetchData = async () => {
+    try {
+      const [disCount] = await Promise.all([
+        axios.get("https://localhost:7104/api/Order/GetFixedDiscount"),
+      ]);
+      setDiscounts(disCount.data);
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
       return total + item.price * item.quantity;
@@ -59,7 +84,9 @@ const CartModal = ({
 
   const handleProceedToDetails = () => {
     if (!canProceed) {
-      showToast(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add ₹${amountNeededForMinOrder} more to proceed.`);
+      showToast(
+        `Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add ₹${amountNeededForMinOrder} more to proceed.`
+      );
       return;
     }
     setShowDetails(true);
@@ -68,27 +95,31 @@ const CartModal = ({
   const handleFinalOrder = () => {
     // Check minimum order amount first
     if (!canProceed) {
-      showToast(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add ₹${amountNeededForMinOrder} more.`);
+      showToast(
+        `Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add ₹${amountNeededForMinOrder} more.`
+      );
       return;
     }
 
     // Validate if address contains valid location
     const normalizedAddress = (address || "").trim();
-    const isValidLocation = deliveryType === "Home Delivery"
-      ? /ulwe|kharkopar|bamandongri/i.test(normalizedAddress)
-      : true;
+    const isValidLocation =
+      deliveryType === "Home Delivery"
+        ? /ulwe|kharkopar|bamandongri/i.test(normalizedAddress)
+        : true;
 
-    // Check for validation errors
     const newErrors = {
       name: !customerName.trim(),
       phone: !/^[0-9]{10}$/.test(userPhone),
       address: deliveryType === "Home Delivery" && !normalizedAddress,
-      location: deliveryType === "Home Delivery" && normalizedAddress && !isValidLocation,
+      location:
+        deliveryType === "Home Delivery" &&
+        normalizedAddress &&
+        !isValidLocation,
     };
 
     setErrors(newErrors);
 
-    // If any errors exist, show alert and stop
     if (newErrors.name) {
       showToast("Please enter your name");
       return;
@@ -102,12 +133,14 @@ const CartModal = ({
       return;
     }
     if (newErrors.location) {
-      showToast("Sorry! We only deliver to Ulwe, Kharkopar, Bamandongri, Navi Mumbai");
+      showToast(
+        "Sorry! We only deliver to Ulwe, Kharkopar, Bamandongri, Navi Mumbai"
+      );
       return;
     }
 
     localStorage.setItem("userPhone", userPhone);
-      
+
     handlePlaceOrder({
       customerName,
       userPhone,
@@ -138,7 +171,7 @@ const CartModal = ({
         <div className="p-3 sm:p-4">
           {cart.length === 0 ? (
             <p className="text-gray-500 text-center py-8 text-sm sm:text-base">
-              Your cart is empty
+              Your cart is
             </p>
           ) : (
             <>
@@ -187,35 +220,45 @@ const CartModal = ({
                   </div>
                 </div>
               ))}
-              <div className={`mt-4 p-3 rounded-lg ${
-                canProceed 
-                  ? 'bg-green-50 border border-green-200' 
-                  : 'bg-red-50 border border-red-200'
-              }`}>
+              <div
+                className={`mt-4 p-3 rounded-lg ${
+                  canProceed
+                    ? "bg-green-50 border border-green-200"
+                    : "bg-red-50 border border-red-200"
+                }`}
+              >
                 <div className="flex items-start gap-2">
                   {canProceed ? (
-                    <ShoppingBag size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+                    <ShoppingBag
+                      size={20}
+                      className="text-green-600 flex-shrink-0 mt-0.5"
+                    />
                   ) : (
-                    <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                    <AlertCircle
+                      size={20}
+                      className="text-red-600 flex-shrink-0 mt-0.5"
+                    />
                   )}
-                  
+
                   <div className="flex-grow">
                     {canProceed ? (
                       <>
                         <p className="font-semibold text-green-800 text-sm">
-                           Ready to Place Order!
+                          Ready to Place Order!
                         </p>
                         <p className="text-xs text-green-700 mt-1">
-                          Your order meets the minimum amount of ₹{MIN_ORDER_AMOUNT}
+                          Your order meets the minimum amount of ₹
+                          {MIN_ORDER_AMOUNT}
                         </p>
                       </>
                     ) : (
                       <>
                         <p className="font-semibold text-red-800 text-sm">
-                           Minimum Order: ₹{MIN_ORDER_AMOUNT}
+                          Minimum Order: ₹{MIN_ORDER_AMOUNT}
                         </p>
                         <p className="text-xs text-red-700 mt-1">
-                          Add ₹{amountNeededForMinOrder} more to place your order
+                          Add ₹{amountNeededForMinOrder} more to place your
+                          order
                         </p>
                       </>
                     )}
@@ -226,7 +269,12 @@ const CartModal = ({
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div
                         className="bg-red-500 h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((subtotal / MIN_ORDER_AMOUNT) * 100, 100)}%` }}
+                        style={{
+                          width: `${Math.min(
+                            (subtotal / MIN_ORDER_AMOUNT) * 100,
+                            100
+                          )}%`,
+                        }}
                       />
                     </div>
                     <p className="text-xs text-gray-600 mt-1 text-right">
@@ -239,24 +287,34 @@ const CartModal = ({
               <div className="mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200 space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-700">Subtotal:</span>
-                  <span className="text-gray-900 font-semibold">₹{subtotal}</span>
+                  <span className="text-gray-900 font-semibold">
+                    ₹{subtotal}
+                  </span>
                 </div>
-                
-                {/* <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-700">Delivery Charge:</span>
-                  <span className="text-green-600 font-semibold">FREE</span>
-                </div> */}
+
+                {discounts > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-xs text-red-500 font-medium">
+                      You will receive {discounts}% discount once
+                      the order is delivered.
+                    </span>
+                  </div>
+                )}
 
                 <div className="border-t pt-2 flex justify-between items-center">
-                  <span className="text-base text-gray-800 font-semibold">Total Amount:</span>
-                  <span className="text-xl text-black font-bold">₹{finalTotal}</span>
+                  <span className="text-base text-gray-800 font-semibold">
+                    Total Amount:
+                  </span>
+                  <span className="text-xl text-black font-bold">
+                    ₹{finalTotal}
+                  </span>
                 </div>
               </div>
 
               {/* User Details Form */}
               {showDetails ? (
                 <div className="mt-4 space-y-4">
-                   {/* Special Instructions */}
+                  {/* Special Instructions */}
                   <div>
                     <label className="text-gray-700 font-medium block mb-2">
                       Special Instructions (Optional)
@@ -269,7 +327,7 @@ const CartModal = ({
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
                     />
                   </div>
-                  
+
                   {/* Name */}
                   <div>
                     <label className="text-gray-700 font-medium block mb-2">
@@ -335,21 +393,28 @@ const CartModal = ({
                       {/* Header - Click to expand/collapse */}
                       <button
                         type="button"
-                        onClick={() => setShowAddressSection(!showAddressSection)}
+                        onClick={() =>
+                          setShowAddressSection(!showAddressSection)
+                        }
                         className={`w-full p-4 flex items-center justify-between bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-150 transition-all ${
-                          errors.address || errors.location ? 'border-l-4 border-red-500' : ''
+                          errors.address || errors.location
+                            ? "border-l-4 border-red-500"
+                            : ""
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           <MapPin className="text-green-600" size={20} />
                           <span className="text-gray-700 font-medium">
-                            Delivery Address <span className="text-red-500">*</span>
+                            Delivery Address{" "}
+                            <span className="text-red-500">*</span>
                           </span>
-                          {(address || "").trim() && !errors.address && !errors.location && (
-                            <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
-                              Added ✓
-                            </span>
-                          )}
+                          {(address || "").trim() &&
+                            !errors.address &&
+                            !errors.location && (
+                              <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
+                                Added ✓
+                              </span>
+                            )}
                         </div>
                         {showAddressSection ? (
                           <ChevronUp className="text-gray-600" size={20} />
@@ -366,11 +431,21 @@ const CartModal = ({
                             onChange={(e) => {
                               setAddress(e.target.value);
                               if (e.target.value.trim()) {
-                                setErrors((prev) => ({ ...prev, address: false }));
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  address: false,
+                                }));
                               }
                               // Check if location is valid
-                              if (/ulwe|kharkopar|bamandongri/i.test(e.target.value)) {
-                                setErrors((prev) => ({ ...prev, location: false }));
+                              if (
+                                /ulwe|kharkopar|bamandongri/i.test(
+                                  e.target.value
+                                )
+                              ) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  location: false,
+                                }));
                               }
                             }}
                             placeholder="Enter your complete address in Ulwe, Kharkopar or Bamandongri, Navi Mumbai"
@@ -389,12 +464,14 @@ const CartModal = ({
                           {errors.location && (
                             <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                               <MapPin size={14} />
-                              Please enter an address in Ulwe, Kharkopar or Bamandongri, Navi Mumbai
+                              Please enter an address in Ulwe, Kharkopar or
+                              Bamandongri, Navi Mumbai
                             </p>
                           )}
                           <p className="text-green-600 text-xs mt-2 font-medium flex items-center gap-1">
                             <MapPin size={12} />
-                            Delivery available in Ulwe, Kharkopar, Bamandongri area only
+                            Delivery available in Ulwe, Kharkopar, Bamandongri
+                            area only
                           </p>
                         </div>
                       )}
@@ -410,10 +487,9 @@ const CartModal = ({
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
-                    {canProceed 
+                    {canProceed
                       ? `Confirm & Place Order - ₹${finalTotal}`
-                      : `Minimum Order ₹${MIN_ORDER_AMOUNT} Required`
-                    }
+                      : `Minimum Order ₹${MIN_ORDER_AMOUNT} Required`}
                   </button>
                 </div>
               ) : (
@@ -426,10 +502,9 @@ const CartModal = ({
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  {canProceed 
-                  ? `Place Order - ₹${finalTotal} (COD)`
-                  : `Add ₹${amountNeededForMinOrder} more (Min ₹${MIN_ORDER_AMOUNT})`
-                  }
+                  {canProceed
+                    ? `Place Order - ₹${finalTotal} (COD)`
+                    : `Add ₹${amountNeededForMinOrder} more (Min ₹${MIN_ORDER_AMOUNT})`}
                 </button>
               )}
             </>

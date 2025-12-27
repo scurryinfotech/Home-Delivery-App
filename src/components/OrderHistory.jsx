@@ -3,13 +3,17 @@ import { Check } from "lucide-react";
 import noOrdersImage from "../assets/image.png";
 import OrderCountdownTimer from "./OrderCountdownTimer";
 
+import axios from "axios";
+
 const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [discounts, setDiscounts] = useState(null);
 
-   useEffect(() => {
+  useEffect(() => {
     if (!selectedOrder) return;
 
     const updatedOrder = orders.find(
@@ -17,17 +21,27 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
     );
 
     if (updatedOrder) {
-      setSelectedOrder(updatedOrder); 
+      setSelectedOrder(updatedOrder);
     }
-  }, [orders])
+  }, [orders]);
 
   useEffect(() => {
     fetchOrders();
+    fetchData();
     const fetchInterval = setInterval(fetchOrders, 5000);
     return () => clearInterval(fetchInterval);
   }, []);
 
-  debugger;
+  const fetchData = async () => {
+    try {
+      const [disCount] = await Promise.all([
+        axios.get("https://localhost:7104/api/Order/GetFixedDiscount"),
+      ]);
+      setDiscounts(disCount.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   const getTableNumber = () => {
     return (
@@ -43,7 +57,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
   const groupOrdersByOrderId = (ordersArray) => {
     const grouped = {};
 
-    ordersArray.forEach(order => {
+    ordersArray.forEach((order) => {
       const orderId = order.orderId || order.OrderId;
       if (!grouped[orderId]) {
         grouped[orderId] = {
@@ -53,14 +67,14 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
           modifiedDate: order.modifiedDate,
           tableNo: order.tableNo || order.TableNo,
           items: [],
-          discount: order.discount
+          discount: order.discount,
         };
       }
       grouped[orderId].items.push(order);
     });
 
     // Determine the overall status for each order group
-    Object.values(grouped).forEach(group => {
+    Object.values(grouped).forEach((group) => {
       group.orderStatusId = determineOrderStatus(group.items);
     });
 
@@ -68,14 +82,14 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
   };
 
   const determineOrderStatus = (items) => {
-    const statuses = items.map(item => item.orderStatusId);
+    const statuses = items.map((item) => item.orderStatusId);
 
-    const allCancelled = statuses.every(s => s === 5);
+    const allCancelled = statuses.every((s) => s === 5);
     if (allCancelled) return 5;
 
-    const nonCancelledStatuses = statuses.filter(s => s !== 5);
+    const nonCancelledStatuses = statuses.filter((s) => s !== 5);
     if (nonCancelledStatuses.length > 0) {
-      const allDelivered = nonCancelledStatuses.every(s => s === 4);
+      const allDelivered = nonCancelledStatuses.every((s) => s === 4);
       if (allDelivered) return 4;
 
       const minStatus = Math.min(...nonCancelledStatuses);
@@ -91,7 +105,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
         1: 1, // Highest priority - Order Place
         2: 2, // Medium priority - Preparin
         3: 3, // Lowest priority - Delivere
-        4: 4  // Cancelled orders at the en
+        4: 4, // Cancelled orders at the en
       };
 
       const priorityA = statusPriority[a.orderStatusId] || 5;
@@ -108,6 +122,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
   };
 
   const fetchOrders = async () => {
+
     try {
       setLoading(true);
       setError(null);
@@ -117,7 +132,8 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       const actualTableNo = getTableNumber();
       const userId = localStorage.getItem("userId");
       const response = await fetch(
-        `https://localhost:7104/api/Order/GetOrderHome?${userId ? `&userId=${userId}` : ""
+        `https://localhost:7104/api/Order/GetOrderHome?${
+          userId ? `&userId=${userId}` : ""
         }`,
         {
           headers: {
@@ -135,10 +151,10 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
 
       const filteredOrders = actualTableNo
         ? ordersArray.filter((order) => {
-          const orderTableNo =
-            order.tableNo || order.TableNo || order.table_no;
-          return orderTableNo == actualTableNo;
-        })
+            const orderTableNo =
+              order.tableNo || order.TableNo || order.table_no;
+            return orderTableNo == actualTableNo;
+          })
         : ordersArray;
 
       // NEW: Group orders by orderId, then sort
@@ -196,12 +212,14 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
 
   const formatPortionText = (order) => {
     if (order.fullPortion) {
-      return `${order.fullPortion} Full Portion${order.fullPortion > 1 ? "s" : ""
-        }`;
+      return `${order.fullPortion} Full Portion${
+        order.fullPortion > 1 ? "s" : ""
+      }`;
     }
     if (order.halfPortion) {
-      return `${order.halfPortion} Half Portion${order.halfPortion > 1 ? "s" : ""
-        }`;
+      return `${order.halfPortion} Half Portion${
+        order.halfPortion > 1 ? "s" : ""
+      }`;
     }
     const qty = order.quantity || 0;
     return `${qty} portion${qty > 1 ? "s" : ""}`;
@@ -234,8 +252,8 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
       selectedOrder.orderStatusId === 1
         ? 0
         : selectedOrder.orderStatusId === 2
-          ? 2
-          : 3;
+        ? 2
+        : 3;
 
     const totalPrice = calculateGroupTotalPrice(selectedOrder);
 
@@ -269,9 +287,7 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                 <span className="text-gray-600">
                   Order #{selectedOrder.orderId}
                 </span>
-                <span className="text-lg font-bold">
-                  ₹{totalPrice}
-                </span>
+                <span className="text-lg font-bold">₹{totalPrice}</span>
               </div>
               <div className="text-sm text-gray-500">
                 Placed at {selectedOrder.createdDate || "N/A"}
@@ -302,22 +318,23 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                       modifiedDate={selectedOrder.modifiedDate}
                       durationMinutes={30}
                     />
-                  ) : ( 
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {getStatusText(selectedOrder.orderStatusId)}
-                    </p>
-                    <p className="text-xs font-medium text-yellow-800">
-                      Special Instructions:
-                    </p>
-                    <p className="text-xs text-yellow-700">
-                      <p className="text-xs text-yellow-700">
-                        {selectedOrder.items.find(i => i.specialInstructions)?.specialInstructions || "None"}
+                  ) : (
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        {getStatusText(selectedOrder.orderStatusId)}
                       </p>
-                    </p>
-                  </div>
-
-                   )} 
+                      <p className="text-xs font-medium text-yellow-800">
+                        Special Instructions:
+                      </p>
+                      <p className="text-xs text-yellow-700">
+                        <p className="text-xs text-yellow-700">
+                          {selectedOrder.items.find(
+                            (i) => i.specialInstructions
+                          )?.specialInstructions || "None"}
+                        </p>
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -350,7 +367,13 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                           </div>
                         )}
                       </div>
-                      <p className={`font-medium ml-4 ${item.orderStatusId === 5 ? 'line-through text-gray-400' : ''}`}>
+                      <p
+                        className={`font-medium ml-4 ${
+                          item.orderStatusId === 5
+                            ? "line-through text-gray-400"
+                            : ""
+                        }`}
+                      >
                         ₹{calculateTotalPrice(item)}
                       </p>
                     </div>
@@ -389,12 +412,13 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                   <div key={index} className="flex mb-6 last:mb-0">
                     <div className="relative flex flex-col items-center mr-4">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${step.completed
-                          ? "bg-green-500"
-                          : index === currentStepIndex
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          step.completed
+                            ? "bg-green-500"
+                            : index === currentStepIndex
                             ? "bg-orange-500"
                             : "bg-gray-300"
-                          }`}
+                        }`}
                       >
                         {step.completed ? (
                           <Check className="w-5 h-5 text-white" />
@@ -404,17 +428,19 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                       </div>
                       {index < progress.length - 1 && (
                         <div
-                          className={`w-0.5 h-12 ${progress[index + 1].completed
-                            ? "bg-green-500"
-                            : "bg-gray-300"
-                            }`}
+                          className={`w-0.5 h-12 ${
+                            progress[index + 1].completed
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
                         ></div>
                       )}
                     </div>
                     <div className="flex-1 pb-4">
                       <p
-                        className={`font-medium ${step.completed ? "text-gray-900" : "text-gray-500"
-                          }`}
+                        className={`font-medium ${
+                          step.completed ? "text-gray-900" : "text-gray-500"
+                        }`}
                       >
                         {step.label}
                       </p>
@@ -452,7 +478,6 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
           <h1 className="text-xl font-bold">Orders</h1>
-          <span className="text-gray-400 text-sm">{getOrderId()}</span>
           <button
             onClick={onClose}
             className="px-6 py-2 font-bold bg-gray-200 text-black rounded hover:bg-gray-300 transition-colors"
@@ -520,12 +545,23 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
                       {/* Show all items in the order with their individual statuses */}
                       <div className="space-y-1 mb-2">
                         {groupedOrder.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex items-center gap-2">
-                            <p className={`text-sm ${item.orderStatusId === 5 ? 'line-through text-gray-400' : 'text-gray-600'}`}>
+                          <div
+                            key={itemIndex}
+                            className="flex items-center gap-2"
+                          >
+                            <p
+                              className={`text-sm ${
+                                item.orderStatusId === 5
+                                  ? "line-through text-gray-400"
+                                  : "text-gray-600"
+                              }`}
+                            >
                               • {item.itemName}, {formatPortionText(item)}
                             </p>
                             {item.orderStatusId === 5 && (
-                              <span className="text-xs text-red-500 font-medium">(Cancelled)</span>
+                              <span className="text-xs text-red-500 font-medium">
+                                (Cancelled)
+                              </span>
                             )}
                           </div>
                         ))}
@@ -533,12 +569,20 @@ const OrderHistory = ({ onClose, selectedTable, tableNo }) => {
 
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-gray-500">
-                          {itemCount} item{itemCount > 1 ? 's' : ''}
+                          {itemCount} item{itemCount > 1 ? "s" : ""}
                         </p>
                         <p className="text-sm font-bold text-green-600">
                           Total: ₹{totalPrice}
                         </p>
                       </div>
+                      {discounts > 0 && status !== 4 && status !== 5 && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-xs text-red-500 font-medium">
+                            You will receive {discounts}% discount
+                            once the order is delivered.
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
