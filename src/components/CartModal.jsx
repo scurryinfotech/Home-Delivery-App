@@ -283,7 +283,7 @@ const CartModal = ({
                   </div>
                 )}
               </div>
-
+ 
               <div className="mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200 space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-700">Subtotal:</span>
